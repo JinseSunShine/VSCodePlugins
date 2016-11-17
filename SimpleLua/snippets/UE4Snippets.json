@@ -1,0 +1,1178 @@
+{
+    "ETextShapingMethod": {
+        "scope": "source.lua",
+        "description": "ETextShapingMethod",
+        "prefix": "ETextShapingMethod",
+        "body": "ETextShapingMethod"
+    },
+    "class": {
+        "scope": "source.lua",
+        "description": "class",
+        "prefix": "class",
+        "body": "class"
+    },
+    "GenerateSnippetsHelper": {
+        "scope": "source.lua",
+        "description": "GenerateSnippetsHelper",
+        "prefix": "GenerateSnippetsHelper",
+        "body": "GenerateSnippetsHelper"
+    },
+    "WheeledVehicle": {
+        "scope": "source.lua",
+        "description": "WheeledVehicle",
+        "prefix": "WheeledVehicle",
+        "body": "WheeledVehicle"
+    },
+    "ETextCommit": {
+        "scope": "source.lua",
+        "description": "ETextCommit",
+        "prefix": "ETextCommit",
+        "body": "ETextCommit"
+    },
+    "InAppPurchaseRestoreCallbackProxy": {
+        "scope": "source.lua",
+        "description": "InAppPurchaseRestoreCallbackProxy",
+        "prefix": "InAppPurchaseRestoreCallbackProxy",
+        "body": "InAppPurchaseRestoreCallbackProxy"
+    },
+    "EScrollDirection": {
+        "scope": "source.lua",
+        "description": "EScrollDirection",
+        "prefix": "EScrollDirection",
+        "body": "EScrollDirection"
+    },
+    "ENetworkFailure": {
+        "scope": "source.lua",
+        "description": "ENetworkFailure",
+        "prefix": "ENetworkFailure",
+        "body": "ENetworkFailure"
+    },
+    "PawnAction_Sequence": {
+        "scope": "source.lua",
+        "description": "PawnAction_Sequence",
+        "prefix": "PawnAction_Sequence",
+        "body": "PawnAction_Sequence"
+    },
+    "EGameplayTagMatchType": {
+        "scope": "source.lua",
+        "description": "EGameplayTagMatchType",
+        "prefix": "EGameplayTagMatchType",
+        "body": "EGameplayTagMatchType"
+    },
+    "EAnimInterpolationType": {
+        "scope": "source.lua",
+        "description": "EAnimInterpolationType",
+        "prefix": "EAnimInterpolationType",
+        "body": "EAnimInterpolationType"
+    },
+    "PawnAction_Move": {
+        "scope": "source.lua",
+        "description": "PawnAction_Move",
+        "prefix": "PawnAction_Move",
+        "body": "PawnAction_Move"
+    },
+    "EInAppPurchaseState": {
+        "scope": "source.lua",
+        "description": "EInAppPurchaseState",
+        "prefix": "EInAppPurchaseState",
+        "body": "EInAppPurchaseState"
+    },
+    "EMPMatchOutcome": {
+        "scope": "source.lua",
+        "description": "EMPMatchOutcome",
+        "prefix": "EMPMatchOutcome",
+        "body": "EMPMatchOutcome"
+    },
+    "EEasingFunc": {
+        "scope": "source.lua",
+        "description": "EEasingFunc",
+        "prefix": "EEasingFunc",
+        "body": "EEasingFunc"
+    },
+    "EUnit": {
+        "scope": "source.lua",
+        "description": "EUnit",
+        "prefix": "EUnit",
+        "body": "EUnit"
+    },
+    "InAppPurchaseCallbackProxy": {
+        "scope": "source.lua",
+        "description": "InAppPurchaseCallbackProxy",
+        "prefix": "InAppPurchaseCallbackProxy",
+        "body": "InAppPurchaseCallbackProxy"
+    },
+    "SwordCharacter": {
+        "scope": "source.lua",
+        "description": "SwordCharacter",
+        "prefix": "SwordCharacter",
+        "body": "SwordCharacter"
+    },
+    "VehicleAnimInstance": {
+        "scope": "source.lua",
+        "description": "VehicleAnimInstance",
+        "prefix": "VehicleAnimInstance",
+        "body": "VehicleAnimInstance"
+    },
+    "EDemoPlayFailure": {
+        "scope": "source.lua",
+        "description": "EDemoPlayFailure",
+        "prefix": "EDemoPlayFailure",
+        "body": "EDemoPlayFailure"
+    },
+    "EMovementMode": {
+        "scope": "source.lua",
+        "description": "EMovementMode",
+        "prefix": "EMovementMode",
+        "body": "EMovementMode"
+    },
+    "PawnActionsComponent": {
+        "scope": "source.lua",
+        "description": "PawnActionsComponent",
+        "prefix": "PawnActionsComponent",
+        "body": "PawnActionsComponent"
+    },
+    "MovieScene3DPathSection_Axis": {
+        "scope": "source.lua",
+        "description": "MovieScene3DPathSection_Axis",
+        "prefix": "MovieScene3DPathSection_Axis",
+        "body": "MovieScene3DPathSection_Axis"
+    },
+    "KismetNodeHelperLibrary": {
+        "scope": "source.lua",
+        "description": "KismetNodeHelperLibrary",
+        "prefix": "KismetNodeHelperLibrary",
+        "body": "KismetNodeHelperLibrary"
+    },
+    "EPathFollowingRequestResult": {
+        "scope": "source.lua",
+        "description": "EPathFollowingRequestResult",
+        "prefix": "EPathFollowingRequestResult",
+        "body": "EPathFollowingRequestResult"
+    },
+    "ECollisionEnabled": {
+        "scope": "source.lua",
+        "description": "ECollisionEnabled",
+        "prefix": "ECollisionEnabled",
+        "body": "ECollisionEnabled"
+    },
+    "EVirtualKeyboardType": {
+        "scope": "source.lua",
+        "description": "EVirtualKeyboardType",
+        "prefix": "EVirtualKeyboardType",
+        "body": "EVirtualKeyboardType"
+    },
+    "EWindowMode": {
+        "scope": "source.lua",
+        "description": "EWindowMode",
+        "prefix": "EWindowMode",
+        "body": "EWindowMode"
+    },
+    "FoliageStatistics": {
+        "scope": "source.lua",
+        "description": "FoliageStatistics",
+        "prefix": "FoliageStatistics",
+        "body": "FoliageStatistics"
+    },
+    "EEnvTestDot": {
+        "scope": "source.lua",
+        "description": "EEnvTestDot",
+        "prefix": "EEnvTestDot",
+        "body": "EEnvTestDot"
+    },
+    "JoinSessionCallbackProxy": {
+        "scope": "source.lua",
+        "description": "JoinSessionCallbackProxy",
+        "prefix": "JoinSessionCallbackProxy",
+        "body": "JoinSessionCallbackProxy"
+    },
+    "ETickingGroup": {
+        "scope": "source.lua",
+        "description": "ETickingGroup",
+        "prefix": "ETickingGroup",
+        "body": "ETickingGroup"
+    },
+    "GWithEditor": {
+        "scope": "source.lua",
+        "description": "GWithEditor",
+        "prefix": "GWithEditor",
+        "body": "GWithEditor"
+    },
+    "uetype": {
+        "scope": "source.lua",
+        "description": "uetype",
+        "prefix": "uetype",
+        "body": "uetype"
+    },
+    "GameUserSettings": {
+        "scope": "source.lua",
+        "description": "GameUserSettings",
+        "prefix": "GameUserSettings",
+        "body": "GameUserSettings"
+    },
+    "SequenceRecorderBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "SequenceRecorderBlueprintLibrary",
+        "prefix": "SequenceRecorderBlueprintLibrary",
+        "body": "SequenceRecorderBlueprintLibrary"
+    },
+    "KismetMaterialLibrary": {
+        "scope": "source.lua",
+        "description": "KismetMaterialLibrary",
+        "prefix": "KismetMaterialLibrary",
+        "body": "KismetMaterialLibrary"
+    },
+    "UnrealLuaLibrary": {
+        "scope": "source.lua",
+        "description": "UnrealLuaLibrary",
+        "prefix": "UnrealLuaLibrary",
+        "body": "UnrealLuaLibrary"
+    },
+    "EMenuPlacement": {
+        "scope": "source.lua",
+        "description": "EMenuPlacement",
+        "prefix": "EMenuPlacement",
+        "body": "EMenuPlacement"
+    },
+    "AISense_Prediction": {
+        "scope": "source.lua",
+        "description": "AISense_Prediction",
+        "prefix": "AISense_Prediction",
+        "body": "AISense_Prediction"
+    },
+    "VisualLoggerKismetLibrary": {
+        "scope": "source.lua",
+        "description": "VisualLoggerKismetLibrary",
+        "prefix": "VisualLoggerKismetLibrary",
+        "body": "VisualLoggerKismetLibrary"
+    },
+    "FindSessionsCallbackProxy": {
+        "scope": "source.lua",
+        "description": "FindSessionsCallbackProxy",
+        "prefix": "FindSessionsCallbackProxy",
+        "body": "FindSessionsCallbackProxy"
+    },
+    "GameLiveStreamingFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "GameLiveStreamingFunctionLibrary",
+        "prefix": "GameLiveStreamingFunctionLibrary",
+        "body": "GameLiveStreamingFunctionLibrary"
+    },
+    "EPlaneConstraintAxisSetting": {
+        "scope": "source.lua",
+        "description": "EPlaneConstraintAxisSetting",
+        "prefix": "EPlaneConstraintAxisSetting",
+        "body": "EPlaneConstraintAxisSetting"
+    },
+    "AnimSingleNodeInstance": {
+        "scope": "source.lua",
+        "description": "AnimSingleNodeInstance",
+        "prefix": "AnimSingleNodeInstance",
+        "body": "AnimSingleNodeInstance"
+    },
+    "ESlateVisibility": {
+        "scope": "source.lua",
+        "description": "ESlateVisibility",
+        "prefix": "ESlateVisibility",
+        "body": "ESlateVisibility"
+    },
+    "getcontentdir": {
+        "scope": "source.lua",
+        "description": "getcontentdir",
+        "prefix": "getcontentdir",
+        "body": "getcontentdir"
+    },
+    "ESplineMeshAxis": {
+        "scope": "source.lua",
+        "description": "ESplineMeshAxis",
+        "prefix": "ESplineMeshAxis",
+        "body": "ESplineMeshAxis"
+    },
+    "EUINavigation": {
+        "scope": "source.lua",
+        "description": "EUINavigation",
+        "prefix": "EUINavigation",
+        "body": "EUINavigation"
+    },
+    "EPathFollowingResult": {
+        "scope": "source.lua",
+        "description": "EPathFollowingResult",
+        "prefix": "EPathFollowingResult",
+        "body": "EPathFollowingResult"
+    },
+    "ETouchIndex": {
+        "scope": "source.lua",
+        "description": "ETouchIndex",
+        "prefix": "ETouchIndex",
+        "body": "ETouchIndex"
+    },
+    "createdelegate": {
+        "scope": "source.lua",
+        "description": "createdelegate",
+        "prefix": "createdelegate",
+        "body": "createdelegate"
+    },
+    "BlueprintFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "BlueprintFunctionLibrary",
+        "prefix": "BlueprintFunctionLibrary",
+        "body": "BlueprintFunctionLibrary"
+    },
+    "PawnAction_BlueprintBase": {
+        "scope": "source.lua",
+        "description": "PawnAction_BlueprintBase",
+        "prefix": "PawnAction_BlueprintBase",
+        "body": "PawnAction_BlueprintBase"
+    },
+    "ShowLoginUICallbackProxy": {
+        "scope": "source.lua",
+        "description": "ShowLoginUICallbackProxy",
+        "prefix": "ShowLoginUICallbackProxy",
+        "body": "ShowLoginUICallbackProxy"
+    },
+    "EOrientation": {
+        "scope": "source.lua",
+        "description": "EOrientation",
+        "prefix": "EOrientation",
+        "body": "EOrientation"
+    },
+    "EPathFollowingAction": {
+        "scope": "source.lua",
+        "description": "EPathFollowingAction",
+        "prefix": "EPathFollowingAction",
+        "body": "EPathFollowingAction"
+    },
+    "PawnAction_Wait": {
+        "scope": "source.lua",
+        "description": "PawnAction_Wait",
+        "prefix": "PawnAction_Wait",
+        "body": "PawnAction_Wait"
+    },
+    "SwordGameInstance": {
+        "scope": "source.lua",
+        "description": "SwordGameInstance",
+        "prefix": "SwordGameInstance",
+        "body": "SwordGameInstance"
+    },
+    "LogicCoreFunctions": {
+        "scope": "source.lua",
+        "description": "LogicCoreFunctions",
+        "prefix": "LogicCoreFunctions",
+        "body": "LogicCoreFunctions"
+    },
+    "LeaderboardFlushCallbackProxy": {
+        "scope": "source.lua",
+        "description": "LeaderboardFlushCallbackProxy",
+        "prefix": "LeaderboardFlushCallbackProxy",
+        "body": "LeaderboardFlushCallbackProxy"
+    },
+    "spawnactor": {
+        "scope": "source.lua",
+        "description": "spawnactor",
+        "prefix": "spawnactor",
+        "body": "spawnactor"
+    },
+    "ECheckBoxState": {
+        "scope": "source.lua",
+        "description": "ECheckBoxState",
+        "prefix": "ECheckBoxState",
+        "body": "ECheckBoxState"
+    },
+    "Character": {
+        "scope": "source.lua",
+        "description": "Character",
+        "prefix": "Character",
+        "body": "Character"
+    },
+    "LeaderboardBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "LeaderboardBlueprintLibrary",
+        "prefix": "LeaderboardBlueprintLibrary",
+        "body": "LeaderboardBlueprintLibrary"
+    },
+    "EWidgetInteractionSource": {
+        "scope": "source.lua",
+        "description": "EWidgetInteractionSource",
+        "prefix": "EWidgetInteractionSource",
+        "body": "EWidgetInteractionSource"
+    },
+    "QuitMatchCallbackProxy": {
+        "scope": "source.lua",
+        "description": "QuitMatchCallbackProxy",
+        "prefix": "QuitMatchCallbackProxy",
+        "body": "QuitMatchCallbackProxy"
+    },
+    "EStretchDirection": {
+        "scope": "source.lua",
+        "description": "EStretchDirection",
+        "prefix": "EStretchDirection",
+        "body": "EStretchDirection"
+    },
+    "Debug": {
+        "scope": "source.lua",
+        "description": "Debug",
+        "prefix": "Debug",
+        "body": "Debug"
+    },
+    "logdebug": {
+        "scope": "source.lua",
+        "description": "logdebug",
+        "prefix": "logdebug",
+        "body": "logdebug"
+    },
+    "GWorld": {
+        "scope": "source.lua",
+        "description": "GWorld",
+        "prefix": "GWorld",
+        "body": "GWorld"
+    },
+    "EMediaPlayerTrack": {
+        "scope": "source.lua",
+        "description": "EMediaPlayerTrack",
+        "prefix": "EMediaPlayerTrack",
+        "body": "EMediaPlayerTrack"
+    },
+    "ETimelineDirection": {
+        "scope": "source.lua",
+        "description": "ETimelineDirection",
+        "prefix": "ETimelineDirection",
+        "body": "ETimelineDirection"
+    },
+    "WidgetLayoutLibrary": {
+        "scope": "source.lua",
+        "description": "WidgetLayoutLibrary",
+        "prefix": "WidgetLayoutLibrary",
+        "body": "WidgetLayoutLibrary"
+    },
+    "AchievementWriteCallbackProxy": {
+        "scope": "source.lua",
+        "description": "AchievementWriteCallbackProxy",
+        "prefix": "AchievementWriteCallbackProxy",
+        "body": "AchievementWriteCallbackProxy"
+    },
+    "KismetSystemLibrary": {
+        "scope": "source.lua",
+        "description": "KismetSystemLibrary",
+        "prefix": "KismetSystemLibrary",
+        "body": "KismetSystemLibrary"
+    },
+    "log": {
+        "scope": "source.lua",
+        "description": "log",
+        "prefix": "log",
+        "body": "log"
+    },
+    "EDOFMode": {
+        "scope": "source.lua",
+        "description": "EDOFMode",
+        "prefix": "EDOFMode",
+        "body": "EDOFMode"
+    },
+    "NavigationSystem": {
+        "scope": "source.lua",
+        "description": "NavigationSystem",
+        "prefix": "NavigationSystem",
+        "body": "NavigationSystem"
+    },
+    "ConnectionCallbackProxy": {
+        "scope": "source.lua",
+        "description": "ConnectionCallbackProxy",
+        "prefix": "ConnectionCallbackProxy",
+        "body": "ConnectionCallbackProxy"
+    },
+    "ERoundingMode": {
+        "scope": "source.lua",
+        "description": "ERoundingMode",
+        "prefix": "ERoundingMode",
+        "body": "ERoundingMode"
+    },
+    "ECollisionChannel": {
+        "scope": "source.lua",
+        "description": "ECollisionChannel",
+        "prefix": "ECollisionChannel",
+        "body": "ECollisionChannel"
+    },
+    "ECollisionResponse": {
+        "scope": "source.lua",
+        "description": "ECollisionResponse",
+        "prefix": "ECollisionResponse",
+        "body": "ECollisionResponse"
+    },
+    "EDragPivot": {
+        "scope": "source.lua",
+        "description": "EDragPivot",
+        "prefix": "EDragPivot",
+        "body": "EDragPivot"
+    },
+    "DestroySessionCallbackProxy": {
+        "scope": "source.lua",
+        "description": "DestroySessionCallbackProxy",
+        "prefix": "DestroySessionCallbackProxy",
+        "body": "DestroySessionCallbackProxy"
+    },
+    "AchievementQueryCallbackProxy": {
+        "scope": "source.lua",
+        "description": "AchievementQueryCallbackProxy",
+        "prefix": "AchievementQueryCallbackProxy",
+        "body": "AchievementQueryCallbackProxy"
+    },
+    "InAppPurchaseQueryCallbackProxy": {
+        "scope": "source.lua",
+        "description": "InAppPurchaseQueryCallbackProxy",
+        "prefix": "InAppPurchaseQueryCallbackProxy",
+        "body": "InAppPurchaseQueryCallbackProxy"
+    },
+    "LuaPlatformIO": {
+        "scope": "source.lua",
+        "description": "LuaPlatformIO",
+        "prefix": "LuaPlatformIO",
+        "body": "LuaPlatformIO"
+    },
+    "BlueprintPlatformLibrary": {
+        "scope": "source.lua",
+        "description": "BlueprintPlatformLibrary",
+        "prefix": "BlueprintPlatformLibrary",
+        "body": "BlueprintPlatformLibrary"
+    },
+    "EButtonClickMethod": {
+        "scope": "source.lua",
+        "description": "EButtonClickMethod",
+        "prefix": "EButtonClickMethod",
+        "body": "EButtonClickMethod"
+    },
+    "taketableref": {
+        "scope": "source.lua",
+        "description": "taketableref",
+        "prefix": "taketableref",
+        "body": "taketableref"
+    },
+    "EObjectTypeQuery": {
+        "scope": "source.lua",
+        "description": "EObjectTypeQuery",
+        "prefix": "EObjectTypeQuery",
+        "body": "EObjectTypeQuery"
+    },
+    "KismetInputLibrary": {
+        "scope": "source.lua",
+        "description": "KismetInputLibrary",
+        "prefix": "KismetInputLibrary",
+        "body": "KismetInputLibrary"
+    },
+    "FunctionalTestingManager": {
+        "scope": "source.lua",
+        "description": "FunctionalTestingManager",
+        "prefix": "FunctionalTestingManager",
+        "body": "FunctionalTestingManager"
+    },
+    "NiagaraFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "NiagaraFunctionLibrary",
+        "prefix": "NiagaraFunctionLibrary",
+        "body": "NiagaraFunctionLibrary"
+    },
+    "KismetMathLibrary": {
+        "scope": "source.lua",
+        "description": "KismetMathLibrary",
+        "prefix": "KismetMathLibrary",
+        "body": "KismetMathLibrary"
+    },
+    "SlateBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "SlateBlueprintLibrary",
+        "prefix": "SlateBlueprintLibrary",
+        "body": "SlateBlueprintLibrary"
+    },
+    "KismetRenderingLibrary": {
+        "scope": "source.lua",
+        "description": "KismetRenderingLibrary",
+        "prefix": "KismetRenderingLibrary",
+        "body": "KismetRenderingLibrary"
+    },
+    "KismetStringLibrary": {
+        "scope": "source.lua",
+        "description": "KismetStringLibrary",
+        "prefix": "KismetStringLibrary",
+        "body": "KismetStringLibrary"
+    },
+    "SteamVRFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "SteamVRFunctionLibrary",
+        "prefix": "SteamVRFunctionLibrary",
+        "body": "SteamVRFunctionLibrary"
+    },
+    "MeshVertexPainterKismetLibrary": {
+        "scope": "source.lua",
+        "description": "MeshVertexPainterKismetLibrary",
+        "prefix": "MeshVertexPainterKismetLibrary",
+        "body": "MeshVertexPainterKismetLibrary"
+    },
+    "printscreen": {
+        "scope": "source.lua",
+        "description": "printscreen",
+        "prefix": "printscreen",
+        "body": "printscreen"
+    },
+    "ArchVisCharacter": {
+        "scope": "source.lua",
+        "description": "ArchVisCharacter",
+        "prefix": "ArchVisCharacter",
+        "body": "ArchVisCharacter"
+    },
+    "ETextGender": {
+        "scope": "source.lua",
+        "description": "ETextGender",
+        "prefix": "ETextGender",
+        "body": "ETextGender"
+    },
+    "EPathFollowingStatus": {
+        "scope": "source.lua",
+        "description": "EPathFollowingStatus",
+        "prefix": "EPathFollowingStatus",
+        "body": "EPathFollowingStatus"
+    },
+    "AIBlueprintHelperLibrary": {
+        "scope": "source.lua",
+        "description": "AIBlueprintHelperLibrary",
+        "prefix": "AIBlueprintHelperLibrary",
+        "body": "AIBlueprintHelperLibrary"
+    },
+    "LoadBlueprintClass": {
+        "scope": "source.lua",
+        "description": "LoadBlueprintClass",
+        "prefix": "LoadBlueprintClass",
+        "body": "LoadBlueprintClass"
+    },
+    "ESlateBrushDrawType": {
+        "scope": "source.lua",
+        "description": "ESlateBrushDrawType",
+        "prefix": "ESlateBrushDrawType",
+        "body": "ESlateBrushDrawType"
+    },
+    "EStretch": {
+        "scope": "source.lua",
+        "description": "EStretch",
+        "prefix": "EStretch",
+        "body": "EStretch"
+    },
+    "EditorTutorial": {
+        "scope": "source.lua",
+        "description": "EditorTutorial",
+        "prefix": "EditorTutorial",
+        "body": "EditorTutorial"
+    },
+    "CreateSessionCallbackProxy": {
+        "scope": "source.lua",
+        "description": "CreateSessionCallbackProxy",
+        "prefix": "CreateSessionCallbackProxy",
+        "body": "CreateSessionCallbackProxy"
+    },
+    "LeaderboardQueryCallbackProxy": {
+        "scope": "source.lua",
+        "description": "LeaderboardQueryCallbackProxy",
+        "prefix": "LeaderboardQueryCallbackProxy",
+        "body": "LeaderboardQueryCallbackProxy"
+    },
+    "GearVRFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "GearVRFunctionLibrary",
+        "prefix": "GearVRFunctionLibrary",
+        "body": "GearVRFunctionLibrary"
+    },
+    "MovieSceneCaptureEnvironment": {
+        "scope": "source.lua",
+        "description": "MovieSceneCaptureEnvironment",
+        "prefix": "MovieSceneCaptureEnvironment",
+        "body": "MovieSceneCaptureEnvironment"
+    },
+    "KismetArrayLibrary": {
+        "scope": "source.lua",
+        "description": "KismetArrayLibrary",
+        "prefix": "KismetArrayLibrary",
+        "body": "KismetArrayLibrary"
+    },
+    "GameplayStatics": {
+        "scope": "source.lua",
+        "description": "GameplayStatics",
+        "prefix": "GameplayStatics",
+        "body": "GameplayStatics"
+    },
+    "AIPerceptionSystem": {
+        "scope": "source.lua",
+        "description": "AIPerceptionSystem",
+        "prefix": "AIPerceptionSystem",
+        "body": "AIPerceptionSystem"
+    },
+    "LogoutCallbackProxy": {
+        "scope": "source.lua",
+        "description": "LogoutCallbackProxy",
+        "prefix": "LogoutCallbackProxy",
+        "body": "LogoutCallbackProxy"
+    },
+    "LevelSequencePlayer": {
+        "scope": "source.lua",
+        "description": "LevelSequencePlayer",
+        "prefix": "LevelSequencePlayer",
+        "body": "LevelSequencePlayer"
+    },
+    "EInterpToBehaviourType": {
+        "scope": "source.lua",
+        "description": "EInterpToBehaviourType",
+        "prefix": "EInterpToBehaviourType",
+        "body": "EInterpToBehaviourType"
+    },
+    "ESlateBrushTileType": {
+        "scope": "source.lua",
+        "description": "ESlateBrushTileType",
+        "prefix": "ESlateBrushTileType",
+        "body": "ESlateBrushTileType"
+    },
+    "KismetTextLibrary": {
+        "scope": "source.lua",
+        "description": "KismetTextLibrary",
+        "prefix": "KismetTextLibrary",
+        "body": "KismetTextLibrary"
+    },
+    "EVerticalAlignment": {
+        "scope": "source.lua",
+        "description": "EVerticalAlignment",
+        "prefix": "EVerticalAlignment",
+        "body": "EVerticalAlignment"
+    },
+    "ETextFlowDirection": {
+        "scope": "source.lua",
+        "description": "ETextFlowDirection",
+        "prefix": "ETextFlowDirection",
+        "body": "ETextFlowDirection"
+    },
+    "KismetProceduralMeshLibrary": {
+        "scope": "source.lua",
+        "description": "KismetProceduralMeshLibrary",
+        "prefix": "KismetProceduralMeshLibrary",
+        "body": "KismetProceduralMeshLibrary"
+    },
+    "EOverlapFilterOption": {
+        "scope": "source.lua",
+        "description": "EOverlapFilterOption",
+        "prefix": "EOverlapFilterOption",
+        "body": "EOverlapFilterOption"
+    },
+    "OculusFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "OculusFunctionLibrary",
+        "prefix": "OculusFunctionLibrary",
+        "body": "OculusFunctionLibrary"
+    },
+    "ESimulationQuery": {
+        "scope": "source.lua",
+        "description": "ESimulationQuery",
+        "prefix": "ESimulationQuery",
+        "body": "ESimulationQuery"
+    },
+    "DefaultPawn": {
+        "scope": "source.lua",
+        "description": "DefaultPawn",
+        "prefix": "DefaultPawn",
+        "body": "DefaultPawn"
+    },
+    "AISense_Hearing": {
+        "scope": "source.lua",
+        "description": "AISense_Hearing",
+        "prefix": "AISense_Hearing",
+        "body": "AISense_Hearing"
+    },
+    "BTFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "BTFunctionLibrary",
+        "prefix": "BTFunctionLibrary",
+        "body": "BTFunctionLibrary"
+    },
+    "logerror": {
+        "scope": "source.lua",
+        "description": "logerror",
+        "prefix": "logerror",
+        "body": "logerror"
+    },
+    "ETrackingStatus": {
+        "scope": "source.lua",
+        "description": "ETrackingStatus",
+        "prefix": "ETrackingStatus",
+        "body": "ETrackingStatus"
+    },
+    "Pawn": {
+        "scope": "source.lua",
+        "description": "Pawn",
+        "prefix": "Pawn",
+        "body": "Pawn"
+    },
+    "AnimInstance": {
+        "scope": "source.lua",
+        "description": "AnimInstance",
+        "prefix": "AnimInstance",
+        "body": "AnimInstance"
+    },
+    "ETraceTypeQuery": {
+        "scope": "source.lua",
+        "description": "ETraceTypeQuery",
+        "prefix": "ETraceTypeQuery",
+        "body": "ETraceTypeQuery"
+    },
+    "AISense_Damage": {
+        "scope": "source.lua",
+        "description": "AISense_Damage",
+        "prefix": "AISense_Damage",
+        "body": "AISense_Damage"
+    },
+    "TileMapBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "TileMapBlueprintLibrary",
+        "prefix": "TileMapBlueprintLibrary",
+        "body": "TileMapBlueprintLibrary"
+    },
+    "PaperCharacter": {
+        "scope": "source.lua",
+        "description": "PaperCharacter",
+        "prefix": "PaperCharacter",
+        "body": "PaperCharacter"
+    },
+    "EButtonPressMethod": {
+        "scope": "source.lua",
+        "description": "EButtonPressMethod",
+        "prefix": "EButtonPressMethod",
+        "body": "EButtonPressMethod"
+    },
+    "WidgetBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "WidgetBlueprintLibrary",
+        "prefix": "WidgetBlueprintLibrary",
+        "body": "WidgetBlueprintLibrary"
+    },
+    "ETextWrappingPolicy": {
+        "scope": "source.lua",
+        "description": "ETextWrappingPolicy",
+        "prefix": "ETextWrappingPolicy",
+        "body": "ETextWrappingPolicy"
+    },
+    "ESimulationOverlap": {
+        "scope": "source.lua",
+        "description": "ESimulationOverlap",
+        "prefix": "ESimulationOverlap",
+        "body": "ESimulationOverlap"
+    },
+    "EGameplayContainerMatchType": {
+        "scope": "source.lua",
+        "description": "EGameplayContainerMatchType",
+        "prefix": "EGameplayContainerMatchType",
+        "body": "EGameplayContainerMatchType"
+    },
+    "PawnAction": {
+        "scope": "source.lua",
+        "description": "PawnAction",
+        "prefix": "PawnAction",
+        "body": "PawnAction"
+    },
+    "BlueprintGameplayTagLibrary": {
+        "scope": "source.lua",
+        "description": "BlueprintGameplayTagLibrary",
+        "prefix": "BlueprintGameplayTagLibrary",
+        "body": "BlueprintGameplayTagLibrary"
+    },
+    "CanvasRenderTarget2D": {
+        "scope": "source.lua",
+        "description": "CanvasRenderTarget2D",
+        "prefix": "CanvasRenderTarget2D",
+        "body": "CanvasRenderTarget2D"
+    },
+    "HeadMountedDisplayFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "HeadMountedDisplayFunctionLibrary",
+        "prefix": "HeadMountedDisplayFunctionLibrary",
+        "body": "HeadMountedDisplayFunctionLibrary"
+    },
+    "EBTNodeResult": {
+        "scope": "source.lua",
+        "description": "EBTNodeResult",
+        "prefix": "EBTNodeResult",
+        "body": "EBTNodeResult"
+    },
+    "ESequenceEvalReinit": {
+        "scope": "source.lua",
+        "description": "ESequenceEvalReinit",
+        "prefix": "ESequenceEvalReinit",
+        "body": "ESequenceEvalReinit"
+    },
+    "AnimPreviewInstance": {
+        "scope": "source.lua",
+        "description": "AnimPreviewInstance",
+        "prefix": "AnimPreviewInstance",
+        "body": "AnimPreviewInstance"
+    },
+    "QueryLiveStreamsCallbackProxy": {
+        "scope": "source.lua",
+        "description": "QueryLiveStreamsCallbackProxy",
+        "prefix": "QueryLiveStreamsCallbackProxy",
+        "body": "QueryLiveStreamsCallbackProxy"
+    },
+    "EButtonTouchMethod": {
+        "scope": "source.lua",
+        "description": "EButtonTouchMethod",
+        "prefix": "EButtonTouchMethod",
+        "body": "EButtonTouchMethod"
+    },
+    "TurnBasedBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "TurnBasedBlueprintLibrary",
+        "prefix": "TurnBasedBlueprintLibrary",
+        "body": "TurnBasedBlueprintLibrary"
+    },
+    "EControllerHand": {
+        "scope": "source.lua",
+        "description": "EControllerHand",
+        "prefix": "EControllerHand",
+        "body": "EControllerHand"
+    },
+    "AnimPhysSimSpaceType": {
+        "scope": "source.lua",
+        "description": "AnimPhysSimSpaceType",
+        "prefix": "AnimPhysSimSpaceType",
+        "body": "AnimPhysSimSpaceType"
+    },
+    "luaholder": {
+        "scope": "source.lua",
+        "description": "luaholder",
+        "prefix": "luaholder",
+        "body": "luaholder"
+    },
+    "EQSTestingPawn": {
+        "scope": "source.lua",
+        "description": "EQSTestingPawn",
+        "prefix": "EQSTestingPawn",
+        "body": "EQSTestingPawn"
+    },
+    "SpectatorPawn": {
+        "scope": "source.lua",
+        "description": "SpectatorPawn",
+        "prefix": "SpectatorPawn",
+        "body": "SpectatorPawn"
+    },
+    "ESpawnActorCollisionHandlingMethod": {
+        "scope": "source.lua",
+        "description": "ESpawnActorCollisionHandlingMethod",
+        "prefix": "ESpawnActorCollisionHandlingMethod",
+        "body": "ESpawnActorCollisionHandlingMethod"
+    },
+    "DebugDrawService": {
+        "scope": "source.lua",
+        "description": "DebugDrawService",
+        "prefix": "DebugDrawService",
+        "body": "DebugDrawService"
+    },
+    "EProgressBarFillType": {
+        "scope": "source.lua",
+        "description": "EProgressBarFillType",
+        "prefix": "EProgressBarFillType",
+        "body": "EProgressBarFillType"
+    },
+    "EWalkableSlopeBehavior": {
+        "scope": "source.lua",
+        "description": "EWalkableSlopeBehavior",
+        "prefix": "EWalkableSlopeBehavior",
+        "body": "EWalkableSlopeBehavior"
+    },
+    "KismetGuidLibrary": {
+        "scope": "source.lua",
+        "description": "KismetGuidLibrary",
+        "prefix": "KismetGuidLibrary",
+        "body": "KismetGuidLibrary"
+    },
+    "EBlendMode": {
+        "scope": "source.lua",
+        "description": "EBlendMode",
+        "prefix": "EBlendMode",
+        "body": "EBlendMode"
+    },
+    "exposetable": {
+        "scope": "source.lua",
+        "description": "exposetable",
+        "prefix": "exposetable",
+        "body": "exposetable"
+    },
+    "LevelStreamingKismet": {
+        "scope": "source.lua",
+        "description": "LevelStreamingKismet",
+        "prefix": "LevelStreamingKismet",
+        "body": "LevelStreamingKismet"
+    },
+    "AITask_MoveTo": {
+        "scope": "source.lua",
+        "description": "AITask_MoveTo",
+        "prefix": "AITask_MoveTo",
+        "body": "AITask_MoveTo"
+    },
+    "AchievementBlueprintLibrary": {
+        "scope": "source.lua",
+        "description": "AchievementBlueprintLibrary",
+        "prefix": "AchievementBlueprintLibrary",
+        "body": "AchievementBlueprintLibrary"
+    },
+    "ESlateSizeRule": {
+        "scope": "source.lua",
+        "description": "ESlateSizeRule",
+        "prefix": "ESlateSizeRule",
+        "body": "ESlateSizeRule"
+    },
+    "ELerpInterpolationMode": {
+        "scope": "source.lua",
+        "description": "ELerpInterpolationMode",
+        "prefix": "ELerpInterpolationMode",
+        "body": "ELerpInterpolationMode"
+    },
+    "PawnAction_Repeat": {
+        "scope": "source.lua",
+        "description": "PawnAction_Repeat",
+        "prefix": "PawnAction_Repeat",
+        "body": "PawnAction_Repeat"
+    },
+    "EHorizontalAlignment": {
+        "scope": "source.lua",
+        "description": "EHorizontalAlignment",
+        "prefix": "EHorizontalAlignment",
+        "body": "EHorizontalAlignment"
+    },
+    "EDrawDebugTrace": {
+        "scope": "source.lua",
+        "description": "EDrawDebugTrace",
+        "prefix": "EDrawDebugTrace",
+        "body": "EDrawDebugTrace"
+    },
+    "EFormatArgumentType": {
+        "scope": "source.lua",
+        "description": "EFormatArgumentType",
+        "prefix": "EFormatArgumentType",
+        "body": "EFormatArgumentType"
+    },
+    "EUINavigationRule": {
+        "scope": "source.lua",
+        "description": "EUINavigationRule",
+        "prefix": "EUINavigationRule",
+        "body": "EUINavigationRule"
+    },
+    "EScreenOrientation": {
+        "scope": "source.lua",
+        "description": "EScreenOrientation",
+        "prefix": "EScreenOrientation",
+        "body": "EScreenOrientation"
+    },
+    "EButtonState": {
+        "scope": "source.lua",
+        "description": "EButtonState",
+        "prefix": "EButtonState",
+        "body": "EButtonState"
+    },
+    "EnvQueryManager": {
+        "scope": "source.lua",
+        "description": "EnvQueryManager",
+        "prefix": "EnvQueryManager",
+        "body": "EnvQueryManager"
+    },
+    "EPhysicalSurface": {
+        "scope": "source.lua",
+        "description": "EPhysicalSurface",
+        "prefix": "EPhysicalSurface",
+        "body": "EPhysicalSurface"
+    },
+    "EWidgetBlendMode": {
+        "scope": "source.lua",
+        "description": "EWidgetBlendMode",
+        "prefix": "EWidgetBlendMode",
+        "body": "EWidgetBlendMode"
+    },
+    "ESelectInfo": {
+        "scope": "source.lua",
+        "description": "ESelectInfo",
+        "prefix": "ESelectInfo",
+        "body": "ESelectInfo"
+    },
+    "logwarning": {
+        "scope": "source.lua",
+        "description": "logwarning",
+        "prefix": "logwarning",
+        "body": "logwarning"
+    },
+    "AsyncTaskDownloadImage": {
+        "scope": "source.lua",
+        "description": "AsyncTaskDownloadImage",
+        "prefix": "AsyncTaskDownloadImage",
+        "body": "AsyncTaskDownloadImage"
+    },
+    "ESteamVRTrackedDeviceType": {
+        "scope": "source.lua",
+        "description": "ESteamVRTrackedDeviceType",
+        "prefix": "ESteamVRTrackedDeviceType",
+        "body": "ESteamVRTrackedDeviceType"
+    },
+    "ETravelFailure": {
+        "scope": "source.lua",
+        "description": "ETravelFailure",
+        "prefix": "ETravelFailure",
+        "body": "ETravelFailure"
+    },
+    "SKEL_LevelEditorAttract_C": {
+        "scope": "source.lua",
+        "description": "SKEL_LevelEditorAttract_C",
+        "prefix": "SKEL_LevelEditorAttract_C",
+        "body": "SKEL_LevelEditorAttract_C"
+    },
+    "EWidgetSpace": {
+        "scope": "source.lua",
+        "description": "EWidgetSpace",
+        "prefix": "EWidgetSpace",
+        "body": "EWidgetSpace"
+    },
+    "ETextJustify": {
+        "scope": "source.lua",
+        "description": "ETextJustify",
+        "prefix": "ETextJustify",
+        "body": "ETextJustify"
+    },
+    "EEndPlayReason": {
+        "scope": "source.lua",
+        "description": "EEndPlayReason",
+        "prefix": "EEndPlayReason",
+        "body": "EEndPlayReason"
+    },
+    "ESlateColorStylingMode": {
+        "scope": "source.lua",
+        "description": "ESlateColorStylingMode",
+        "prefix": "ESlateColorStylingMode",
+        "body": "ESlateColorStylingMode"
+    },
+    "LevelEditorAttract_C": {
+        "scope": "source.lua",
+        "description": "LevelEditorAttract_C",
+        "prefix": "LevelEditorAttract_C",
+        "body": "LevelEditorAttract_C"
+    },
+    "ENetworkSmoothingMode": {
+        "scope": "source.lua",
+        "description": "ENetworkSmoothingMode",
+        "prefix": "ENetworkSmoothingMode",
+        "body": "ENetworkSmoothingMode"
+    },
+    "DataTableFunctionLibrary": {
+        "scope": "source.lua",
+        "description": "DataTableFunctionLibrary",
+        "prefix": "DataTableFunctionLibrary",
+        "body": "DataTableFunctionLibrary"
+    },
+    "KMUMGLibrary": {
+        "scope": "source.lua",
+        "description": "KMUMGLibrary",
+        "prefix": "KMUMGLibrary",
+        "body": "KMUMGLibrary"
+    },
+    "EParticleSysParamType": {
+        "scope": "source.lua",
+        "description": "EParticleSysParamType",
+        "prefix": "EParticleSysParamType",
+        "body": "EParticleSysParamType"
+    }
+}

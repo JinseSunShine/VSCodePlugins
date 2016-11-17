@@ -1,0 +1,136 @@
+{
+	"name": "simple-lua",
+	"displayName": "SimpleLua",
+	"version": "0.0.1",
+	"publisher": "hehe",
+	"description": "Don't install, this plugin is used by ourselves only.",
+	"author": {
+		"name": "hehe",
+		"email": "qq410029478@163.com"
+	},
+	"engines": {
+		"vscode": "^1.4.0",
+		"node": "^5.10.0"
+	},
+	"icon": "images/sven_vert.jpg",
+	"categories": [
+		"Debuggers"
+	],
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/Microsoft/vscode-mock-debug.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
+	},
+	"dependencies": {
+		"vscode-debugprotocol": "^1.11.0-pre.8",
+		"vscode-debugadapter": "^1.11.0-pre.6",
+		"vscode-languageclient": "^2.2.1"
+	},
+	"devDependencies": {
+		"typescript": "^1.8.9",
+		"mocha": "^2.4.5",
+		"vscode": "^0.11.0",
+		"vscode-debugadapter-testsupport": "^1.11.0-pre.0"
+	},
+	"scripts": {
+		"vscode:prepublish": "node ./node_modules/typescript/bin/tsc -p ./src",
+		"compile": "node ./node_modules/typescript/bin/tsc -p ./src",
+		"watch": "node ./node_modules/typescript/bin/tsc -w -p ./src",
+		"test": "node ./node_modules/mocha/bin/mocha -u tdd ./out/tests/",
+		"postinstall": "node ./node_modules/vscode/bin/install"
+	},
+	"main": "./out/extension",
+	"activationEvents": [
+		"onLanguage:lua"
+	],
+	"contributes": {
+		"snippets": [
+			{
+				"language": "lua",
+				"path": "./snippets/snippets.json"
+			},
+			{
+				"language": "lua",
+				"path": "./snippets/UE4Snippets.json"
+			}
+		],
+		"breakpoints": [
+			{
+				"language": "lua"
+			}
+		],
+		"debuggers": [
+			{
+				"type": "lua",
+				"label": "SimpleLua",
+				"program": "./out/mockDebug.js",
+				"runtime": "node",
+				"variables": {},
+				"configurationAttributes": {
+					"launch": {
+						"required": [
+							"projectDir"
+						],
+						"properties": {
+							"projectDir": {
+								"type": "string",
+								"description": "Absolute path of the project.",
+								"default": "${workspaceRoot}"
+							},
+							"clientIndex": {
+								"type": "string",
+								"description": "Client Index passed to mobdebug",
+								"default": "1"
+							},
+							"stopOnEntry": {
+								"type": "boolean",
+								"description": "Automatically stop after launch.",
+								"default": true
+							}
+						}
+					}
+				},
+				"initialConfigurations": [
+					{
+						"name": "SimpleLua 1",
+						"type": "lua",
+						"request": "launch",
+						"projectDir": "${workspaceRoot}",
+						"clientIndex": "1",
+						"stopOnEntry": true
+					},
+					{
+						"name": "SimpleLua 2",
+						"type": "lua",
+						"request": "launch",
+						"projectDir": "${workspaceRoot}",
+						"clientIndex": "2",
+						"stopOnEntry": true
+					},
+					{
+						"name": "SimpleLua 3",
+						"type": "lua",
+						"request": "launch",
+						"projectDir": "${workspaceRoot}",
+						"clientIndex": "3",
+						"stopOnEntry": true
+					}
+				]
+			}
+		],
+		"configuration": {
+			"type": "object",
+			"title": "LuaInspect configuration",
+			"properties": {
+				"LuaInspect.ShowAllValues": {
+					"type": "boolean",
+					"default": false,
+					"description": "Whether to show all id's value."
+				}
+			}
+		}
+	}
+}

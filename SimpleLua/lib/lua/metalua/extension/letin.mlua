@@ -1,0 +1,74 @@
+
+return function (mlp)
+    mlp.lexer:add{ "let", "in" }
+   ------------------------------------------------------
+   -- This creates the code returned by the macro.
+   -- Notice the holes-in-quote-in-splice.
+   ------------------------------------------------------
+   local function let_in_builder (x)
+     local variable, value, expr = unpack (x)
+     return +{
+       function (-{variable}) 
+         return -{expr} 
+       end (-{value}) }
+   end
+   ------------------------------------------------------
+   -- Extend the expression parser; code generation is
+   -- delegated to the function let_in_builder() below.
+   ------------------------------------------------------
+   mlp.expr:add{ 
+     "let", mlp.id, "=", mlp.expr, "in", mlp.expr, 
+     builder = let_in_builder }
+
+  mlp.lexer:add "+="
+  mlp.assignments["+="] = function (lhs, rhs)
+    assert(#lhs==1 and #rhs==1)
+    local a, b = lhs[1], rhs[1]
+    return +{stat: (-{a}) = -{a} + -{b} }
+  end 
+
+  function trywith_builder(x)
+    ---------------------------------------------------------
+    -- Get the parts of the sequence:
+    ---------------------------------------------------------
+    local block, _, handlers = unpack(x)
+
+    ---------------------------------------------------------
+    -- [catchers] is the big [if] statement which handles errors
+    -- reported by [pcall].
+    ---------------------------------------------------------
+    local catchers = `If{ }
+    for _, x in ipairs (handlers) do
+      -- insert the condition:
+      table.insert (catchers, +{ -{x[1]} <= exn })
+      -- insert the corresponding block to execute on success:
+      table.insert (catchers, x[2])
+    end
+
+    ---------------------------------------------------------
+    -- Finally, put an [else] block to rethrow uncought errors:
+    ---------------------------------------------------------
+    table.insert (catchers, +{block: error (exn)})
+
+    ---------------------------------------------------------
+    -- Splice the pieces together and return the result:
+    ---------------------------------------------------------
+    return +{ block:
+      local status, exn  = { pcall (function() -{block} end) }
+      if not status then
+          -{ catchers }
+      end }
+  end
+
+  gg = require 'metalua.grammar.generator' 
+  trywith_parser = 
+    gg.sequence{ "try",  mlp.block,  "with",  gg.optkeyword "|",
+                  gg.list{ gg.sequence{ mlp.expr,  "->",  mlp.block },
+                          separators = "|", terminators = "end" },
+                  "end", 
+                  builder = trywith_builder }
+  mlp.stat:add(trywith_parser)
+  mlp.lexer:add{ "try", "with", "->" }
+  mlp.block.terminators:add{ "|", "with" }
+
+end

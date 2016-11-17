@@ -1,0 +1,11 @@
+{
+	"version": "0.1.0",
+	"command": "npm",
+	"isShellCommand": true,
+	"isWatching": false,
+	"showOutput": "always",
+	"args": [
+		"run", "compile"
+	],
+	"problemMatcher": "$tsc-watch"
+}
