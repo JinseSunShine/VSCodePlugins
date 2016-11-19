@@ -6,8 +6,30 @@
 package.path = package.path .. ';metalualib/?.lua'
 package.path = package.path .. ';lib/?.lua'
 
+-- require("mobdebug").start(nil, require("mobdebug").port + 1)
+
+local function loadfile(filename)
+    local fh = assert(io.open(filename, 'r'))
+    local data = fh:read'*a'
+    fh:close()
+    return data
+end
+
+local function writefile(filename, output)
+    local fh = assert(io.open(filename, 'wb'))
+    fh:write(output)
+    fh:close()
+end
+
+local function fail(err)
+    io.stderr:write(err, '\n')
+    os.exit(1)
+end
+
 SwordGame_Home = os.getenv("SWORDGAME_HOME")
 SwordGame_LuaPath = {}
+SwordGame_Wnds = {}
+SwordGame_Prefabs = {}
 if SwordGame_Home then
     local lfs = require"lfs"
 
@@ -33,30 +55,27 @@ if SwordGame_Home then
     local all_dirs = {}
     GatherDir(SwordGame_Home .. "/Scripts", all_dirs)
     package.path = package.path..';'..table.concat(all_dirs, ";")
-end
 
--- require("mobdebug").start(nil, require("mobdebug").port + 1)
+    local json = require"json"
+    local wnd_json, err_ = loadfile(SwordGame_Home .. "/Content/GameData/Client/UI/Wnd.json")
+    if wnd_json then
+        local wnds = json.decode(wnd_json)
+        for _, wnd_tab in pairs(wnds[1]) do
+            SwordGame_Wnds[wnd_tab.nID] = wnd_tab
+        end
+    end
+
+    local prefab_json, err_ = loadfile(SwordGame_Home .. "/Content/GameData/Client/UI/Prefab.json")
+    if prefab_json then
+        local prefabs = json.decode(prefab_json)
+        for _, prefab_tab in pairs(prefabs[1]) do
+            SwordGame_Prefabs[prefab_tab.nID] = prefab_tab
+        end
+    end
+end
 
 local LA = require "luainspect.ast"
 local LI = require "luainspect.init"
-
-local function loadfile(filename)
-    local fh = assert(io.open(filename, 'r'))
-    local data = fh:read'*a'
-    fh:close()
-    return data
-end
-
-local function writefile(filename, output)
-    local fh = assert(io.open(filename, 'wb'))
-    fh:write(output)
-    fh:close()
-end
-
-local function fail(err)
-    io.stderr:write(err, '\n')
-    os.exit(1)
-end
 
 -- Warning/status reporting function.
 -- CATEGORY: reporting + AST

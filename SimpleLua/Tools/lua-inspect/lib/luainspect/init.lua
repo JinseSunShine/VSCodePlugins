@@ -949,8 +949,10 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
     elseif ast.tag == 'Call' or ast.tag == 'Invoke' then
         -- Determine function to call (infer via index if method call).
         local isinvoke = ast.tag == 'Invoke'
+        local isUIManagerGetWnd = false
         if isinvoke then
             local t, k = ast[1].value, ast[2].value
+            isUIManagerGetWnd = k == 'GetWnd'
             if known(t) and known(k) then
                 local ok; ok, ast.valueself = pzcall(tindex, {ast[1], ast[2]}, t, k)
                 if not ok then ast.valueself = T.error(ast.valueself) end
@@ -986,28 +988,14 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                     local val = M.require_inspect(argvalues[1], report, spath:gsub('[^\\/]+$', ''))
 
                     if SwordGame_Home and argvalues[1] == "UI" then
-                        local json = require"json"
-                        local wnd_json, err_ = readfile(SwordGame_Home .. "/Content/GameData/Client/UI/Wnd.json")
-                        if wnd_json then
-                            local wnds = json.decode(wnd_json)
-                            for _, wnd_tab in pairs(wnds[1]) do
-                                for k, v in pairs(wnd_tab) do
-                                    if k == "szWndName" then
-                                        val[v:sub(4)] = wnd_tab.nID
-                                    end
-                                end
+                        for wnd_id, wnd_tab in pairs(SwordGame_Wnds) do
+                            if wnd_tab.szWndName then
+                                val[wnd_tab.szWndName:sub(4)] = wnd_tab.nID
                             end
                         end
-
-                        local prefab_json, err_ = readfile(SwordGame_Home .. "/Content/GameData/Client/UI/Prefab.json")
-                        if prefab_json then
-                            local prefabs = json.decode(prefab_json)
-                            for _, prefab_tab in pairs(prefabs[1]) do
-                                for k, v in pairs(prefab_tab) do
-                                    if k == "szPrefabName" then
-                                        val[v:sub(2)] = prefab_tab.nID
-                                    end
-                                end
+                        for prefab_id, prefab_tab in pairs(SwordGame_Prefabs) do
+                            if prefab_tab.szPrefabName then
+                                val[prefab_tab.szPrefabName:sub(2)] = prefab_tab.nID
                             end
                         end
                     end
@@ -1049,6 +1037,15 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                     ast.valuelist = copytable(retvals);
                     if ast[1] and ast[1][1] == 'luaclass' and argvalues[2] and known(argvalues[2]) and type(argvalues[2]) == 'table' then
                         ast.valuelist = {n=1,copytable(argvalues[2])};
+                    elseif isUIManagerGetWnd and nPass == 2 and known(argvalues[2]) and type(argvalues[2]) == 'number' and SwordGame_Wnds[argvalues[2]] then
+                        local szScript = SwordGame_Wnds[argvalues[2]].szScriptName
+                        if SwordGame_LuaPath[szScript] then
+                            local val = M.require_inspect(szScript, report, SwordGame_LuaPath[szScript]:gsub('[^\\/]+$', ''))
+                            if known(val) and val ~= nil then
+                                ast.valuelist = {val, n=1}
+                                ast.value = ast.valuelist[1]
+                            end
+                        end
                     else
                         ast.valuelist = copytable(retvals);
                     end
@@ -1056,7 +1053,9 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 elseif known(func) and type(func) == 'table' then -- chenliang3 hack to luaclass
                     local new_object = copytable(func)
                     ast.valuelist = {n=1, new_object}; ast.value = new_object
-                else
+                end
+
+                if not known(ast.value) or ast.value == nil then
                     -- Could not infer.
                     ast.valuelist = {n=0, sizeunknown=true}; ast.value = T.universal
                 end
