@@ -684,13 +684,19 @@ local UE4WidgetNames =
 }
 
 local function AddSignature(func, func_params)
+    local param_min, param_max = 0, 0
     local params = {}
     local types = {}
-    for _, name_type in pairs(func_params) do
-        table.insert(params, name_type.Name)
-        table.insert(types, name_type.Type)
+    for _, param_prop in pairs(func_params) do
+        table.insert(params, param_prop.Name)
+        table.insert(types, param_prop.Type)
+        param_max = param_max + 1
+        if not param_prop.IsRef and not HaveDefault then
+            param_min = param_max
+        end
     end
     LS.value_signatures[func] = {Params=params, Types=types}
+    return param_min, param_max
 end
 
 local Map_Widget_Funcs = {}
@@ -713,9 +719,8 @@ local function GetUE4WidgetFuncs(widget_name)
         if UE4.ClassDefs[widget_fullname] then
             for k, func_prop in pairs(UE4.ClassDefs[widget_fullname].FuncDefs) do
                 local func = function() end
-                AddSignature(func, func_prop.Params)
-                local nNum = table.maxn(func_prop.Params)+1 -- add self
-                LS.argument_counts[func]={nNum,nNum}
+                local param_min, param_max = AddSignature(func, func_prop.Params)
+                LS.argument_counts[func]={param_min+1, param_max+1} -- add self
                 funcs[k] = func
             end
         end
@@ -747,9 +752,8 @@ function M.GetGlobalsFromUE4()
         for func_name, func_prop in pairs(class_def.FuncDefs) do
             if func_prop.IsStatic then
                 local func = function () end
-                AddSignature(func, func_prop.Params)
-                local nNum = table.maxn(func_prop.Params)
-                LS.argument_counts[func]={nNum,nNum}
+                local param_min, param_max = AddSignature(func, func_prop.Params)
+                LS.argument_counts[func]={param_min, param_max}
                 static_funcs[func_name] = func
                 bHaveStatic = true
             end
