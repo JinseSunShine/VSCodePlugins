@@ -411,7 +411,7 @@ end
 local function tastnewindex(t_ast, k_ast, v_ast)
     if known(t_ast.value) and known(k_ast.value) and known(v_ast.value) then
         local _1, _2, _3 = t_ast.value, k_ast.value, v_ast.value
-        if _1[_2] ~= nil and _3 ~= _1[_2] then -- multiple values
+        if _1[_2] ~= nil and _3 ~= _1[_2] and type(_3) ~= type(_1[_2]) then -- multiple values --chenliang3 add type check
             return T.universal
         else
             _1[_2] = _3
