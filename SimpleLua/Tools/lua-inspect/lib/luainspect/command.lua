@@ -31,6 +31,8 @@ SwordGame_LuaPath = {}
 SwordGame_Wnds = {}
 SwordGame_Prefabs = {}
 if SwordGame_Home then
+    SwordGame_Home = string.gsub(SwordGame_Home, '\\\\', '/')
+    SwordGame_Home = string.gsub(SwordGame_Home, '\\', '/')
     local lfs = require"lfs"
 
     function GatherDir (current_dir, table_dirs)

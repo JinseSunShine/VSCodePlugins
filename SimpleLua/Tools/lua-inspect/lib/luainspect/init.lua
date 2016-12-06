@@ -691,7 +691,7 @@ local function AddSignature(func, func_params)
         table.insert(params, param_prop.Name)
         table.insert(types, param_prop.Type)
         param_max = param_max + 1
-        if not param_prop.IsRef and not HaveDefault then
+        if not param_prop.IsRef and not param_prop.HaveDefault then
             param_min = param_max
         end
     end
@@ -1600,7 +1600,6 @@ function M.get_value_details(ast, tokenlist, src)
 
     local vast = ast.seevalue or ast
 
-    local json = require "json"
     local value_str = tostring(vast.value)
     if type(vast.value) == 'table' and vast.value["__tostring"] == nil then
         local keys = {}
@@ -1621,14 +1620,6 @@ function M.get_value_details(ast, tokenlist, src)
         lines[#lines+1] = {Type="Error", Value=value_str:sub(string.len("VSCodeError:")+1)}
     else
         lines[#lines+1] = {Type="Hint", Value=value_str}
-    end
-
-    local sig = M.get_signature(vast)
-    if type(sig) == 'table' then
-        lines[#lines+1] = {Type="Signature", Value=sig}
-    elseif type(sig) == 'string' then
-        local kind = sig:find '%w%s*%b()$'  and 'signature' or 'description'
-        lines[#lines+1] = kind .. ": " .. sig
     end
 
     local fpos, fline, path = M.ast_to_definition_position(ast, tokenlist)
@@ -1656,11 +1647,21 @@ function M.get_value_details(ast, tokenlist, src)
         end
     end
 
-    -- Render warning notes attached to calls/invokes.
-    local note = vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke')
-        and vast.parent.note
-    if note then
-        lines[#lines+1] = {Type="Warning", Value=note}
+    local sig = M.get_signature(vast)
+    if type(sig) == 'table' then
+        lines[#lines+1] = {Type="Signature", Value=sig}
+    elseif type(sig) == 'string' then
+        local kind = sig:find '%w%s*%b()$'  and 'signature' or 'description'
+        lines[#lines+1] = kind .. ": " .. sig
+    end
+    if vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke') then
+        if vast.parent.note then
+            -- Render warning notes attached to calls/invokes.
+            lines[#lines+1] = {Type="Warning", Value=vast.parent.note}
+        end
+        if not sig then
+            lines[#lines+1] = {Type="Signature"}
+        end
     end
 
     return lines

@@ -20,6 +20,9 @@ let connection: IConnection = createConnection(new IPCMessageReader(process), ne
 
 let documents = new Map();
 
+let fs = require("fs")
+let path = require("path")
+let CandidateFuncs = JSON.parse(fs.readFileSync(path.join(path.dirname(__dirname),"CandidateFuncs.json")))
 
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
@@ -81,9 +84,6 @@ let MapFileCompletions = new Map();
 let MapFileSignatures = new Map();
 let GlobalSignatures = new Map();
 
-
-const path = require('path');
-
 function IsPosInRange(pos, range) {
 	let line = pos.line
 	let character = pos.character
@@ -101,40 +101,53 @@ function IsPosInRange(pos, range) {
 	return true;
 }
 
-function GenerateSignature(id_name, signature)
+function GenerateSignature(id_name, signature_array)
 {
-	let params = new Array<ParameterInformation>()
-	let params_str = new Array<String>()
-	let params_type = null
-	if (Array.isArray(signature["Types"]))
+	let sig_info_array = new Array()
+	
+	for (let signature of signature_array)
 	{
-		params_type = signature["Types"]
-	}
-	if (Array.isArray(signature["Params"]))
-	{
-		for (let index = 0; index < signature["Params"].length; index++)
+		let params = new Array<ParameterInformation>()
+		let params_str = new Array<String>()
+		let params_type = null
+		if (Array.isArray(signature["Types"]))
 		{
-			let param = signature["Params"][index]
+			params_type = signature["Types"]
+		}
+		if (Array.isArray(signature["Params"]))
+		{
+			for (let index = 0; index < signature["Params"].length; index++)
+			{
+				let param = signature["Params"][index]
 
-			params.push(ParameterInformation.create(param))
-			if (params_type)
-			{
-				let param_type = params_type[index]
-				params_str.push(`${param_type} ${param}`)
-			}
-			else
-			{
-				params_str.push(param)
+				params.push(ParameterInformation.create(param))
+				if (params_type)
+				{
+					let param_type = params_type[index]
+					params_str.push(`${param_type} ${param}`)
+				}
+				else
+				{
+					params_str.push(param)
+				}
 			}
 		}
+		let strclass = signature["ClassName"]
+		if (strclass == null)
+		{
+			strclass = ""
+		}
+		else
+		{
+			strclass += ":"
+		}
+		sig_info_array.push({
+			label: `${strclass}${id_name}(${params_str.toString()})`,
+			parameters: params
+		})
 	}
 	
-	let sig_info = {
-		label: `${id_name}(${params_str.toString()})`,
-		parameters: params
-	}
-	
-	return {signatures: [sig_info], activeSignature: 0}
+	return {signatures: sig_info_array, activeSignature: 0}
 }
 
 const child_process = require('child_process');
@@ -231,7 +244,7 @@ let run_lua_inspect = function (document_item) {
 							if (GlobalNameSignature["Name"] != null && GlobalNameSignature["Signature"])
 							{
 								let func_name = GlobalNameSignature["Name"]
-								GlobalSignatures.set(func_name, GenerateSignature(func_name, GlobalNameSignature["Signature"]))
+								GlobalSignatures.set(func_name, GenerateSignature(func_name, [GlobalNameSignature["Signature"]]))
 							}
 						}
 					}
@@ -361,14 +374,23 @@ let run_lua_inspect = function (document_item) {
 								}
 								else if (desc["Type"] == "Signature")
 								{
+									let func_prop = null
 									if (desc["Value"])
+									{
+										func_prop = [desc["Value"]]
+									}
+									else if (CandidateFuncs[id_name])
+									{
+										func_prop = CandidateFuncs[id_name]
+									}
+									if (func_prop != null)
 									{
 										if (!map_id_signatures.has(id_name))
 										{
-											map_id_signatures.set(id_name, GenerateSignature(id_name, desc["Value"]))
+											map_id_signatures.set(id_name, GenerateSignature(id_name, func_prop))
 										}
 										let sig_info = map_id_signatures.get(id_name)
-										AddValueProperty(map_range_info, id_range, "Signature", sig_info.signatures[0].label)
+										AddValueProperty(map_range_info, id_range, "Signature", sig_info.signatures)
 									}
 								} 
 							}
@@ -451,14 +473,20 @@ let on_hover = function (params, token) {
 				let file_path = Files.uriToFilePath(def_loc.uri)
 				if (file_path.startsWith(workspaceRoot))
 				{
-					let path = require("path")
 					file_path = path.relative(workspaceRoot, file_path)
 					mark_strings.push(MarkedString.fromPlainText(`Defined at ${file_path}`))
 				}
 			}
 			if (range_loc[1].Signature)
-			{
-				mark_strings.push(MarkedString.fromPlainText(range_loc[1].Signature))
+			{	
+				if (!range_loc[1].Definition)
+				{
+					mark_strings.push(MarkedString.fromPlainText("Possible Signature:"))
+				}
+				for (let sig of range_loc[1].Signature)
+				{
+					mark_strings.push(MarkedString.fromPlainText(sig.label))
+				}
 			}
 			return {contents:mark_strings};
 		}
