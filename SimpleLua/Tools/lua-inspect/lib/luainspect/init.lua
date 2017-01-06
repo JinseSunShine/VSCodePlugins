@@ -396,7 +396,7 @@ end
 -- Sets known value on ast to v if ast not pegged.
 -- CATEGORY: utility function for infer_values.
 local function set_value(ast, v)
-    if not ast.isvaluepegged and (ast.value == nil or not known(ast.value))  then
+    if not ast.isvaluepegged and ast.value == nil  then
         ast.value = v
     end
 end
@@ -411,11 +411,17 @@ end
 local function tastnewindex(t_ast, k_ast, v_ast)
     if known(t_ast.value) and known(k_ast.value) and known(v_ast.value) then
         local _1, _2, _3 = t_ast.value, k_ast.value, v_ast.value
+        if t_ast.localdefinition and t_ast.localdefinition.value then
+            _1 = t_ast.localdefinition.value
+        end
         if _1[_2] ~= nil and _3 ~= _1[_2] and type(_3) ~= type(_1[_2]) then -- multiple values --chenliang3 add type check
             return T.universal
         else
+            if _2 == "hehe" then
+                hehe = 1
+            end
             _1[_2] = _3
-            return _3
+            return _1[_2]
         end
     else
         return T.universal
@@ -842,7 +848,9 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                     local vlidx = i - #values_ast + 1
                     value = valuelist.sizeunknown and vlidx > valuelist.n and T.universal or valuelist[vlidx]
                 end
-                set_value(var_ast, value)
+                if not T.iserror[value] then
+                    set_value(var_ast, value)
+                end
             end
     elseif ast.tag == 'Set' then -- note: implementation similar to 'Local'
         local vars_ast, values_ast = ast[1], ast[2]
@@ -856,27 +864,27 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local vlidx = i - #values_ast + 1
                 value = valuelist.sizeunknown and vlidx > valuelist.n and T.universal or valuelist[vlidx]
             end
-            if var_ast.tag == 'Index' then
-                local t_ast, k_ast = var_ast[1], var_ast[2]
-                if not T.istype[t_ast.value] then -- note: don't mutate types
-                    local v_ast = {value=value}
-                    local ok;  ok, value_error = pzcall(tastnewindex, {t_ast, k_ast, v_ast}, t_ast, k_ast, v_ast)
-                    if not ok then
-                        value_error = T.error(value_error)
-                    elseif var_ast.value == "VSCodeError:Invalid key name" then
-                        var_ast.value = nil
-                    else
-                        set_value(var_ast, value_error)
+            if not T.iserror[value] then
+                if var_ast.tag == 'Index' then
+                    local t_ast, k_ast = var_ast[1], var_ast[2]
+                    if not T.istype[t_ast.value] then -- note: don't mutate types
+                        local v_ast = {value=value}
+                        local ok;  ok, value_error = pzcall(tastnewindex, {t_ast, k_ast, v_ast}, t_ast, k_ast, v_ast)
+                        if not ok then
+                            value_error = T.error(value_error)
+                        else
+                            set_value(var_ast, value_error)
+                        end
+                        --FIX: propagate to localdefinition?
                     end
-                    --FIX: propagate to localdefinition?
-                end
-            else
-                assert(var_ast.tag == 'Id', var_ast.tag)
-                if var_ast.localdefinition then
-                    set_value(var_ast, value)
-                else -- global
-                    local name = var_ast[1]
-                    top_ast.valueglobals[name] = value
+                else
+                    assert(var_ast.tag == 'Id', var_ast.tag)
+                    if var_ast.localdefinition then
+                        set_value(var_ast, value)
+                    else -- global
+                        local name = var_ast[1]
+                        top_ast.valueglobals[name] = value
+                    end
                 end
             end
             --FIX: propagate to definition or localdefinition?
@@ -920,36 +928,12 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
         end
     elseif ast.tag == 'Index' then
         local t_ast, k_ast = ast[1], ast[2]
-        if (known(t_ast.value) or T.istabletype[t_ast.value]) then
-            if t_ast.tag == "Id" and t_ast[1] == 'self' and k_ast.value == 'pWidgetRef' then
-                local UE4 = require "UE4"
-                local widget_funcs = GetUE4WidgetFuncs("Widget")
-                set_value(ast, widget_funcs)
-                ast.IsUE4Widget = true
-            elseif t_ast.IsUE4Widget then
-                local widget_name = k_ast.value
-                if type(widget_name) == 'string' and not widget_name:match("^On") then --过滤掉OnClick之类的代理
-                    local widget_funcs = GetUE4WidgetFuncs(widget_name)
-                    if widget_funcs then
-                        set_value(ast, widget_funcs)
-                        ast.IsUE4Widget = true
-                    else
-                        ast.value = "VSCodeError:Can't determine widget type from name"
-                    end
-                end
-            elseif known(k_ast.value) then
-                local ok; ok, ast.value = pzcall(tindex, {t_ast, k_ast}, t_ast.value, k_ast.value)
-                if ok then
-                    if ast.value == nil and t_ast.value and type(t_ast.value) == 'table' and IsBasicTable(t_ast.value)
-                        and type(k_ast.value) == 'string' then
-                        ast.value = "VSCodeError:Invalid key name"
-                    end
-                else
-                    ast.value = T.error(ast.value)
-                end
+        if known(k_ast.value) then
+            local ok; ok, ast.value = pzcall(tindex, {t_ast, k_ast}, t_ast.value, k_ast.value)
+            if not ok then
+                ast.value = T.error(ast.value)
             end
         end
-
     elseif ast.tag == 'Call' or ast.tag == 'Invoke' then
         -- Determine function to call (infer via index if method call).
         local isinvoke = ast.tag == 'Invoke'
@@ -961,7 +945,31 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local ok; ok, ast.valueself = pzcall(tindex, {ast[1], ast[2]}, t, k)
                 if not ok then ast.valueself = T.error(ast.valueself) end
             end
-
+        elseif ast[1][1] == 'SetType' then
+            local VarDef = ast[2] and ast[2].localdefinition and ast[2].localdefinition.value
+            local VarType = ast[3] and ast[3].value
+            local HaveError = false
+            if not VarType or unknown(VarType) then
+                set_value(ast[3], T.error("Can't find Type"))
+                HaveError = true
+            end
+            if not VarDef or unknown(VarDef) then
+                set_value(ast[2], T.error("Can't find definition"))
+                HaveError = true
+            end
+            if not HaveError then
+                local MetaTable = getmetatable(VarDef)
+                if not MetaTable then
+                    MetaTable = {}
+                end
+                MetaTable.__index = function() 
+                    return T.error("hehe") 
+                end
+                MetaTable.__newindex = function(Table, Key)  
+                    Table[Key] = T.error("hehe") 
+                end
+                setmetatable(VarDef, MetaTable)
+            end
         end
         local func; if isinvoke then func = ast.valueself else func = ast[1].value end
 
@@ -1601,7 +1609,7 @@ function M.get_value_details(ast, tokenlist, src)
     local vast = ast.seevalue or ast
 
     local value_str = tostring(vast.value)
-    if type(vast.value) == 'table' and vast.value["__tostring"] == nil then
+    if type(vast.value) == 'table' and vast.localdefinition == vast and vast.value["__tostring"] == nil then
         local keys = {}
         for k, v in pairs(vast.value) do
             k = tostring(k)
@@ -1614,10 +1622,8 @@ function M.get_value_details(ast, tokenlist, src)
         else
             lines[#lines+1] = {Type="Hint", Value=value_str}
         end
-    elseif value_str:match("^VSCodeWarning:") then
-        lines[#lines+1] = {Type="Warning", Value=value_str:sub(string.len("VSCodeWarning:")+1)}
-    elseif value_str:match("^VSCodeError:") then
-        lines[#lines+1] = {Type="Error", Value=value_str:sub(string.len("VSCodeError:")+1)}
+    elseif T.iserror[vast.value] then
+        lines[#lines+1] = {Type="Error", Value=value_str}
     else
         lines[#lines+1] = {Type="Hint", Value=value_str}
     end

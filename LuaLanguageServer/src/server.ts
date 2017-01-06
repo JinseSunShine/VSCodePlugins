@@ -8,8 +8,8 @@ import Uri from 'vscode-uri'
 import {
 	IPCMessageReader, IPCMessageWriter,
 	createConnection, IConnection, TextDocumentSyncKind,
-	TextDocument, Diagnostic, DiagnosticSeverity,SignatureHelp,SignatureInformation,ParameterInformation,
-	InitializeParams, InitializeResult, TextDocumentPositionParams,MarkedString,DocumentHighlight,
+	TextDocument, Diagnostic, DiagnosticSeverity, SignatureHelp, SignatureInformation, ParameterInformation,
+	InitializeParams, InitializeResult, TextDocumentPositionParams, MarkedString, DocumentHighlight,
 	CompletionItem, CompletionItemKind, Files, Definition, Location, Range, RenameParams,
 	Position, SymbolInformation, SymbolKind, TextEdit, PublishDiagnosticsParams, WorkspaceEdit
 } from 'vscode-languageserver';
@@ -22,7 +22,7 @@ let documents = new Map();
 
 let fs = require("fs")
 let path = require("path")
-let CandidateFuncs = JSON.parse(fs.readFileSync(path.join(path.dirname(__dirname),"CandidateFuncs.json")))
+let CandidateFuncs = JSON.parse(fs.readFileSync(path.join(path.dirname(__dirname), "CandidateFuncs.json")))
 
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
@@ -35,16 +35,16 @@ connection.onInitialize((params): InitializeResult => {
 			definitionProvider: true,
 			documentSymbolProvider: true,
 			documentFormattingProvider: true,
-			hoverProvider : true,
+			hoverProvider: true,
 			documentRangeFormattingProvider: true,
-			documentHighlightProvider : true,
-			referencesProvider : true,
-			renameProvider : true,
+			documentHighlightProvider: true,
+			referencesProvider: true,
+			renameProvider: true,
 			completionProvider: {
 				triggerCharacters: ['.', ':', '"', "'"]
 			},
-			"signatureHelpProvider" : {
-				"triggerCharacters": [ '(', ',' ]
+			"signatureHelpProvider": {
+				"triggerCharacters": ['(', ',']
 			}
 		}
 	}
@@ -101,44 +101,35 @@ function IsPosInRange(pos, range) {
 	return true;
 }
 
-function GenerateSignature(id_name, signature_array)
-{
+function GenerateSignature(id_name, signature_array) {
 	let sig_info_array = new Array()
-	
-	for (let signature of signature_array)
-	{
+
+	for (let signature of signature_array) {
 		let params = new Array<ParameterInformation>()
 		let params_str = new Array<String>()
 		let params_type = null
-		if (Array.isArray(signature["Types"]))
-		{
+		if (Array.isArray(signature["Types"])) {
 			params_type = signature["Types"]
 		}
-		if (Array.isArray(signature["Params"]))
-		{
-			for (let index = 0; index < signature["Params"].length; index++)
-			{
+		if (Array.isArray(signature["Params"])) {
+			for (let index = 0; index < signature["Params"].length; index++) {
 				let param = signature["Params"][index]
 
 				params.push(ParameterInformation.create(param))
-				if (params_type)
-				{
+				if (params_type) {
 					let param_type = params_type[index]
 					params_str.push(`${param_type} ${param}`)
 				}
-				else
-				{
+				else {
 					params_str.push(param)
 				}
 			}
 		}
 		let strclass = signature["ClassName"]
-		if (strclass == null)
-		{
+		if (strclass == null) {
 			strclass = ""
 		}
-		else
-		{
+		else {
 			strclass += ":"
 		}
 		sig_info_array.push({
@@ -146,8 +137,8 @@ function GenerateSignature(id_name, signature_array)
 			parameters: params
 		})
 	}
-	
-	return {signatures: sig_info_array, activeSignature: 0}
+
+	return { signatures: sig_info_array, activeSignature: 0 }
 }
 
 const child_process = require('child_process');
@@ -179,10 +170,8 @@ let run_lua_inspect = function (document_item) {
 	connection.console.log(`run luainspect on file: ${file_path}\n`)
 	var inspect_result = child_process.spawnSync('lua', ['lua-inspect/luainspect', file_path]);
 
-	let AddValueProperty = function (map_var, key_var, prop_name, prop_val)
-	{
-		if (!map_var.has(key_var))
-		{
+	let AddValueProperty = function (map_var, key_var, prop_name, prop_val) {
+		if (!map_var.has(key_var)) {
 			map_var.set(key_var, {})
 		}
 		let info_obj = map_var.get(key_var)
@@ -199,7 +188,7 @@ let run_lua_inspect = function (document_item) {
 		for (let index = 0; index < range_lines.length; index++) {
 			if (range_lines[index].startsWith("{")) {
 				let json_data = JSON.parse(range_lines[index])
-				if (json_data != null ) {
+				if (json_data != null) {
 					let RequireCandidates = json_data["RequireCandidates"]
 					if (RequireCandidates && Array.isArray(RequireCandidates)) {
 						let completions = new Array<CompletionItem>()
@@ -209,20 +198,17 @@ let run_lua_inspect = function (document_item) {
 							completions.push(item)
 						}
 						let completion_array = new Array()
-						completion_array.push({offset:1, completions:completions})
+						completion_array.push({ offset: 1, completions: completions })
 						map_id_completions.set("require", completion_array)
 					}
-					else if (json_data["ErrorType"] && json_data["ErrorType"] == "file")
-					{
+					else if (json_data["ErrorType"] && json_data["ErrorType"] == "file") {
 						let error_pos = Position.create(json_data["line"] - 1, json_data["colnum"] - 1)
 						let id_range = Range.create(error_pos, error_pos)
 						diagnostics_array.push(Diagnostic.create(id_range, json_data["msg"], DiagnosticSeverity.Error))
 					}
-					else if (json_data["GlobalCompletions"])
-					{
+					else if (json_data["GlobalCompletions"]) {
 						for (let GlobalNameFields of json_data["GlobalCompletions"]) {
-							if (Array.isArray(GlobalNameFields["Fields"]))
-							{
+							if (Array.isArray(GlobalNameFields["Fields"])) {
 								let completions = new Array<CompletionItem>()
 								for (let field_name of GlobalNameFields["Fields"]) {
 									let item = CompletionItem.create(field_name)
@@ -234,22 +220,19 @@ let run_lua_inspect = function (document_item) {
 									let completion_array = new Array()
 									map_id_completions.set(GlobalNameFields["Name"], completion_array)
 								}
-								map_id_completions.get(GlobalNameFields["Name"]).push({offset:1, completions:completions})
+								map_id_completions.get(GlobalNameFields["Name"]).push({ offset: 1, completions: completions })
 							}
 						}
 					}
-					else if (json_data["GlobalSignatures"])
-					{
+					else if (json_data["GlobalSignatures"]) {
 						for (let GlobalNameSignature of json_data["GlobalSignatures"]) {
-							if (GlobalNameSignature["Name"] != null && GlobalNameSignature["Signature"])
-							{
+							if (GlobalNameSignature["Name"] != null && GlobalNameSignature["Signature"]) {
 								let func_name = GlobalNameSignature["Name"]
 								GlobalSignatures.set(func_name, GenerateSignature(func_name, [GlobalNameSignature["Signature"]]))
 							}
 						}
 					}
-					else
-					{
+					else {
 						let start_pos = Position.create(json_data["Line1"] - 1, json_data["Col1"] - 1)
 						let start_offset = the_doc.offsetAt(start_pos)
 
@@ -258,7 +241,7 @@ let run_lua_inspect = function (document_item) {
 						let id_range = Range.create(start_pos, end_pos)
 
 						let id_name = the_doc.getText().substring(start_offset, end_offset)
-						
+
 						if (json_data["RequirePath"] != null) {
 							let def_pos = Position.create(0, 0)
 							let file_path = json_data["RequirePath"]
@@ -276,31 +259,24 @@ let run_lua_inspect = function (document_item) {
 							let isUnknown = false
 							let isGlobal = false
 
-							for (let attr of json_data["Attributes"])
-							{
-								if (attr == "local")
-								{
+							for (let attr of json_data["Attributes"]) {
+								if (attr == "local") {
 									islocal = true
 								}
-								else if (attr == "unused")
-								{
+								else if (attr == "unused") {
 									isUnused = true
 								}
-								else if (attr == "unknown")
-								{
+								else if (attr == "unknown") {
 									isUnknown = true
 								}
-								else if (attr == "global")
-								{
+								else if (attr == "global") {
 									isGlobal = true
 								}
 							}
-							if (islocal && isUnused && id_name != "_")
-							{
+							if (islocal && isUnused && id_name != "_") {
 								diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unused local variable", DiagnosticSeverity.Warning))
 							}
-							if (isUnknown && isGlobal)
-							{
+							if (isUnknown && isGlobal) {
 								diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unknown global", DiagnosticSeverity.Error))
 							}
 						}
@@ -308,8 +284,7 @@ let run_lua_inspect = function (document_item) {
 						let isfunction = false
 						let isdef = false
 						if (json_data["ValueDesc"] != null) {
-							for (let desc of json_data["ValueDesc"])
-							{
+							for (let desc of json_data["ValueDesc"]) {
 								let def_loc_info = desc["LocationDefined"]
 								if (def_loc_info != null) {
 									let file_path = def_loc_info["Path"]
@@ -324,11 +299,9 @@ let run_lua_inspect = function (document_item) {
 										isdef = true
 									}
 
-									if (islocal)
-									{
+									if (islocal) {
 										let def_loc_info_str = JSON.stringify(def_loc_info)
-										if(!map_loc_highlights.has(def_loc_info_str))
-										{
+										if (!map_loc_highlights.has(def_loc_info_str)) {
 											map_loc_highlights.set(def_loc_info_str, new Array<DocumentHighlight>())
 											map_loc_references.set(def_loc_info_str, new Array<Location>())
 										}
@@ -338,19 +311,16 @@ let run_lua_inspect = function (document_item) {
 								}
 
 								if (desc["Type"] == "Hint") {
-									if (desc["TableKeys"] != null)
-									{
+									if (desc["TableKeys"] != null) {
 										let func_completions = new Array<CompletionItem>()
 										let all_completions = new Array<CompletionItem>()
 										for (let name_type of desc["TableKeys"]) {
 											let item = CompletionItem.create(name_type.Name)
-											if (name_type.Type == "function") 
-											{
+											if (name_type.Type == "function") {
 												item.kind = CompletionItemKind.Function
 												func_completions.push(item)
 											}
-											else
-											{
+											else {
 												item.kind = CompletionItemKind.Field
 											}
 											all_completions.push(item)
@@ -360,7 +330,7 @@ let run_lua_inspect = function (document_item) {
 											let completion_array = new Array()
 											map_id_completions.set(id_name, completion_array)
 										}
-										map_id_completions.get(id_name).push({offset:start_offset, func_completions:func_completions, completions:all_completions})
+										map_id_completions.get(id_name).push({ offset: start_offset, func_completions: func_completions, completions: all_completions })
 									}
 									if (desc["Value"] != null && desc["Value"].startsWith("function")) {
 										isfunction = true
@@ -372,27 +342,22 @@ let run_lua_inspect = function (document_item) {
 								else if (desc["Type"] == "Error") {
 									diagnostics_array.push(Diagnostic.create(id_range, desc["Value"], DiagnosticSeverity.Error))
 								}
-								else if (desc["Type"] == "Signature")
-								{
+								else if (desc["Type"] == "Signature") {
 									let func_prop = null
-									if (desc["Value"])
-									{
+									if (desc["Value"]) {
 										func_prop = [desc["Value"]]
 									}
-									else if (CandidateFuncs[id_name])
-									{
+									else if (CandidateFuncs[id_name]) {
 										func_prop = CandidateFuncs[id_name]
 									}
-									if (func_prop != null)
-									{
-										if (!map_id_signatures.has(id_name))
-										{
+									if (func_prop != null) {
+										if (!map_id_signatures.has(id_name)) {
 											map_id_signatures.set(id_name, GenerateSignature(id_name, func_prop))
 										}
 										let sig_info = map_id_signatures.get(id_name)
 										AddValueProperty(map_range_info, id_range, "Signature", sig_info.signatures)
 									}
-								} 
+								}
 							}
 						}
 
@@ -445,12 +410,10 @@ let on_definition = function (params, token) {
 			if (!IsPosInRange(params.position, range_loc[0])) {
 				continue;
 			}
-			if (range_loc[1].Definition)
-			{
+			if (range_loc[1].Definition) {
 				let def_loc = range_loc[1].Definition
 				let file_path = Files.uriToFilePath(def_loc.uri)
-				if (file_path.startsWith(workspaceRoot))
-				{
+				if (file_path.startsWith(workspaceRoot)) {
 					return def_loc
 				}
 			}
@@ -467,28 +430,23 @@ let on_hover = function (params, token) {
 				continue;
 			}
 			let mark_strings = new Array<MarkedString>()
-			if (range_loc[1].Definition)
-			{
+			if (range_loc[1].Definition) {
 				let def_loc = range_loc[1].Definition
 				let file_path = Files.uriToFilePath(def_loc.uri)
-				if (file_path.startsWith(workspaceRoot))
-				{
+				if (file_path.startsWith(workspaceRoot)) {
 					file_path = path.relative(workspaceRoot, file_path)
 					mark_strings.push(MarkedString.fromPlainText(`Defined at ${file_path}`))
 				}
 			}
-			if (range_loc[1].Signature)
-			{	
-				if (!range_loc[1].Definition)
-				{
+			if (range_loc[1].Signature) {
+				if (!range_loc[1].Definition) {
 					mark_strings.push(MarkedString.fromPlainText("Possible Signature:"))
 				}
-				for (let sig of range_loc[1].Signature)
-				{
+				for (let sig of range_loc[1].Signature) {
 					mark_strings.push(MarkedString.fromPlainText(sig.label))
 				}
 			}
-			return {contents:mark_strings};
+			return { contents: mark_strings };
 		}
 	}
 }
@@ -530,19 +488,19 @@ let on_formatting = function (params, token) {
 		let orig_lines = func_trim_split(the_content)
 
 		let text_edits = new Array();
-		if (orig_lines.length == formatted_lines.length) {
-			for (let line_index = 0; line_index < orig_lines.length; line_index++) {
-				if (orig_lines[line_index] != formatted_lines[line_index]) {
-					let line_range = Range.create(Position.create(line_index, 0), Position.create(line_index, orig_lines[line_index].length))
-					text_edits.push(TextEdit.replace(line_range, formatted_lines[line_index]));
-				}
-			}
-		}
-		else {
+		// if (orig_lines.length == formatted_lines.length) {
+		// 	for (let line_index = 0; line_index < orig_lines.length; line_index++) {
+		// 		if (orig_lines[line_index] != formatted_lines[line_index]) {
+		// 			let line_range = Range.create(Position.create(line_index, 0), Position.create(line_index, orig_lines[line_index].length))
+		// 			text_edits.push(TextEdit.replace(line_range, formatted_lines[line_index]));
+		// 		}
+		// 	}
+		// }
+		// else {
 
-			let line_range = Range.create(Position.create(0, 0), the_doc.positionAt(the_content.length))
-			text_edits.push(TextEdit.replace(line_range, formatted_content));
-		}
+		let line_range = Range.create(Position.create(0, 0), the_doc.positionAt(the_content.length))
+		text_edits.push(TextEdit.replace(line_range, formatted_content));
+		// }
 		return text_edits
 	}
 	else {
@@ -580,29 +538,23 @@ let func_oncompletion = function (params, token) {
 					let completion_array = map_id_completions.get(id_name)
 					let min_distance = Number.MAX_SAFE_INTEGER
 					let completions = null
-					for (let offset_completion of completion_array)
-					{
-						if (completions != null && offset < offset_completion.offset)
-						{
+					for (let offset_completion of completion_array) {
+						if (completions != null && offset < offset_completion.offset) {
 							break
 						}
 						let cur_distance = Math.abs(offset - offset_completion.offset)
-						if (cur_distance < min_distance)
-						{
+						if (cur_distance < min_distance) {
 							min_distance = cur_distance
-							if (seprator == ":" && offset_completion.func_completions)
-							{
+							if (seprator == ":" && offset_completion.func_completions) {
 								completions = offset_completion.func_completions
 							}
-							else
-							{
+							else {
 								completions = offset_completion.completions
 							}
 						}
 					}
 
-					if (completions != null)
-					{
+					if (completions != null) {
 						return completions
 					}
 				}
@@ -620,33 +572,29 @@ let func_onsignature = function (params, token) {
 			let offset = the_doc.offsetAt(params.position)
 			let right_paren_num = 0
 			let param_index = 0
-			for (let i = offset-1; i >= 0; i--)
-			{
-				if (document_item.text[i] == '('){
-					if (right_paren_num == 0)
-					{
+			for (let i = offset - 1; i >= 0; i--) {
+				if (document_item.text[i] == '(') {
+					if (right_paren_num == 0) {
 						offset = i
 						break
 					}
-					else
-					{
+					else {
 						right_paren_num--;
 					}
 				}
-				else if (document_item.text[i] == ')'){
+				else if (document_item.text[i] == ')') {
 					right_paren_num++;
 				}
-				else if (document_item.text[i] == ',' && right_paren_num == 0){
+				else if (document_item.text[i] == ',' && right_paren_num == 0) {
 					param_index++;
 				}
 			}
-			
+
 			let the_substr = document_item.text.substr(0, offset)
 
 			let matches = the_substr.match(/([\w]*[\.]?([\w]*))$/)
 			if (matches != null && matches.length >= 2) {
-				for (let index = 1; index < matches.length; index++)
-				{
+				for (let index = 1; index < matches.length; index++) {
 					let id_name = matches[index]
 					let map_id_signatures = MapFileSignatures.get(params.textDocument.uri)
 					if (map_id_signatures.has(id_name)) {
@@ -654,13 +602,12 @@ let func_onsignature = function (params, token) {
 						signature_help.activeParameter = param_index
 						return signature_help
 					}
-					else if (GlobalSignatures.has(id_name))
-					{
+					else if (GlobalSignatures.has(id_name)) {
 						let signature_help = GlobalSignatures.get(id_name)
 						signature_help.activeParameter = param_index
 						return signature_help
 					}
-				} 
+				}
 			}
 
 		}
@@ -669,16 +616,12 @@ let func_onsignature = function (params, token) {
 
 connection.onSignatureHelp(func_onsignature)
 
-let func_onhighlight = function(params, token)
-{
+let func_onhighlight = function (params, token) {
 	if (MapFileHighlights.has(params.textDocument.uri)) {
 		let map_loc_highlights = MapFileHighlights.get(params.textDocument.uri)
-		for (let refs of map_loc_highlights.values())
-		{
-			for (let highlight of refs)
-			{
-				if (IsPosInRange(params.position, highlight.range))
-				{
+		for (let refs of map_loc_highlights.values()) {
+			for (let highlight of refs) {
+				if (IsPosInRange(params.position, highlight.range)) {
 					return refs
 				}
 			}
@@ -687,16 +630,12 @@ let func_onhighlight = function(params, token)
 }
 connection.onDocumentHighlight(func_onhighlight)
 
-let func_onreferences = function(params, token)
-{
+let func_onreferences = function (params, token) {
 	if (MapFileReferences.has(params.textDocument.uri)) {
 		let map_loc_references = MapFileReferences.get(params.textDocument.uri)
-		for (let refs of map_loc_references.values())
-		{
-			for (let ref of refs)
-			{
-				if (IsPosInRange(params.position, ref.range))
-				{
+		for (let refs of map_loc_references.values()) {
+			for (let ref of refs) {
+				if (IsPosInRange(params.position, ref.range)) {
 					return refs
 				}
 			}
@@ -705,29 +644,23 @@ let func_onreferences = function(params, token)
 }
 connection.onReferences(func_onreferences)
 
-let func_onrename = function(params : RenameParams, token)
-{
-	let workspace_edit : WorkspaceEdit = {changes:{}}
+let func_onrename = function (params: RenameParams, token) {
+	let workspace_edit: WorkspaceEdit = { changes: {} }
 	if (MapFileHighlights.has(params.textDocument.uri)) {
 		let map_loc_highlights = MapFileHighlights.get(params.textDocument.uri)
-		for (let refs of map_loc_highlights.values())
-		{
+		for (let refs of map_loc_highlights.values()) {
 			let findit = false
-			for (let highlight of refs)
-			{
-				if (IsPosInRange(params.position, highlight.range))
-				{
+			for (let highlight of refs) {
+				if (IsPosInRange(params.position, highlight.range)) {
 					findit = true
 				}
 			}
-			if (findit) 
-			{
+			if (findit) {
 				let textedits = new Array<TextEdit>()
-				for (let highlight of refs)
-				{
+				for (let highlight of refs) {
 					textedits.push(TextEdit.replace(highlight.range, params.newName))
 				}
-				workspace_edit.changes[params.textDocument.uri]=textedits
+				workspace_edit.changes[params.textDocument.uri] = textedits
 			}
 		}
 	}
