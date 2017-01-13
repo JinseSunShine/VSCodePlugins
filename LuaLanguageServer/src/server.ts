@@ -26,16 +26,19 @@ let path = require("path")
 let CustomType_completion_array = new Array<CompletionItem>()
 const CustomTypesDir = path.join(path.dirname(__dirname), "../lib/lua/CustomTypes");
 
-function GatherCustomTypeCompletions()
-{
+function GatherCustomTypeCompletions() {
 	CustomType_completion_array = new Array<CompletionItem>()
+
+	let item = CompletionItem.create("Config")
+	item.kind = CompletionItemKind.Class
+	CustomType_completion_array.push(item)
+
 	for (let Item of fs.readdirSync(CustomTypesDir)) {
 		let abs_path = path.join(CustomTypesDir, Item);
 		let fs_state = fs.statSync(abs_path);
-		if (fs_state.isFile() && Item.endsWith(".lua"))
-		{
-			let type_name = Item.substring(0, Item.length-4)
-			let item = CompletionItem.create(type_name)
+		if (fs_state.isFile() && Item.endsWith(".lua")) {
+			let type_name = Item.substring(0, Item.length - 4)
+			item = CompletionItem.create(type_name)
 			item.kind = CompletionItemKind.Class
 			CustomType_completion_array.push(item)
 		}
@@ -43,12 +46,20 @@ function GatherCustomTypeCompletions()
 }
 
 GatherCustomTypeCompletions()
-fs.watch(CustomTypesDir, (event, filename) =>
+
+function ReRunLuaInspect()
 {
-	if(event == 'rename')
+	for(let [k, doc_item] of documents)
 	{
+		run_lua_inspect(doc_item)
+	}
+}
+
+fs.watch(CustomTypesDir, (event, filename) => {
+	if (event == 'rename') {
 		GatherCustomTypeCompletions()
 	}
+	ReRunLuaInspect()
 })
 
 // After the server has started the client sends an initilize request. The server receives
@@ -110,6 +121,7 @@ let MapFileHighlights = new Map<string, Map<any, Array<DocumentHighlight>>>();
 let MapFileCompletions = new Map();
 let MapFileSignatures = new Map();
 let GlobalSignatures = new Map();
+let MapFileToID_Value_Map = new Map();
 
 function IsPosInRange(pos, range) {
 	let line = pos.line
@@ -170,7 +182,67 @@ function GenerateSignature(id_name, signature_array) {
 
 const child_process = require('child_process');
 
+let File_LuaInspect_Map = new Map()
+
 let run_lua_inspect = function (document_item) {
+	if (!File_LuaInspect_Map.has(document_item.uri)) {
+		let the_doc = TextDocument.create(document_item.uri, document_item.languageId, document_item.version, document_item.text)
+		var file_path = Files.uriToFilePath(the_doc.uri)
+		const working_dir = path.join(path.dirname(__dirname), "../Tools");
+		process.chdir(working_dir);
+
+		connection.console.log(`run luainspect on file: ${file_path}\n`)
+		const lua_inspect_ps = child_process.spawn('lua', ['lua-inspect/luainspect', file_path]);
+		lua_inspect_ps.stdout.on('data', (data) => {
+			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+			if (PS_Out_Err.Out == null)
+			{
+				PS_Out_Err.Out = ""
+			}
+			PS_Out_Err.Out += data.toString()	
+		});
+
+		lua_inspect_ps.stderr.on('data', (data) => {
+			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+			if (PS_Out_Err.Err == null)
+			{
+				PS_Out_Err.Err = ""
+			}
+			PS_Out_Err.Err += data.toString()
+		});
+
+		lua_inspect_ps.on('close', (code) => {
+			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+			if (code == 0)
+			{
+				Parse_Inspect_Result(document_item, PS_Out_Err.Out)
+			}
+			else
+			{
+				let error_msg = PS_Out_Err.Err
+				connection.console.log(`stderr: ${error_msg}\n`);
+				let error_json = JSON.parse(error_msg)
+				if (error_json["ErrorType"] == "syntax") {
+					let error_pos = Position.create(error_json["line"] - 1, error_json["colnum"] - 1)
+					let id_range = Range.create(error_pos, error_pos)
+
+					let diagnostics_array = new Array<Diagnostic>()
+					diagnostics_array.push(Diagnostic.create(id_range, error_json["msg"], DiagnosticSeverity.Error))
+					let diagnostics_param = {
+						uri: document_item.uri,
+						diagnostics: diagnostics_array
+					}
+					connection.sendDiagnostics(diagnostics_param)
+				}
+			}
+			File_LuaInspect_Map.delete(document_item.uri)
+		})
+
+		File_LuaInspect_Map.set(document_item.uri, {PS:lua_inspect_ps})
+	}
+}
+
+let Parse_Inspect_Result = function (document_item, inspect_result) {
 	var map_range_info = new Map();
 	MapFileInfo.set(document_item.uri, map_range_info);
 
@@ -189,13 +261,10 @@ let run_lua_inspect = function (document_item) {
 	let map_id_signatures = new Map()
 	MapFileSignatures.set(document_item.uri, map_id_signatures)
 
-	let the_doc = TextDocument.create(document_item.uri, document_item.languageId, document_item.version, document_item.text)
-	var file_path = Files.uriToFilePath(the_doc.uri)
-	const working_dir = path.join(path.dirname(__dirname), "../Tools");
-	process.chdir(working_dir);
+	let ID_Value_Map = new Map()
+	MapFileToID_Value_Map.set(document_item.uri, ID_Value_Map)
 
-	connection.console.log(`run luainspect on file: ${file_path}\n`)
-	var inspect_result = child_process.spawnSync('lua', ['lua-inspect/luainspect', file_path]);
+	let the_doc = TextDocument.create(document_item.uri, document_item.languageId, document_item.version, document_item.text)
 
 	let AddValueProperty = function (map_var, key_var, prop_name, prop_val) {
 		if (!map_var.has(key_var)) {
@@ -210,204 +279,189 @@ let run_lua_inspect = function (document_item) {
 		uri: document_item.uri,
 		diagnostics: diagnostics_array
 	}
-	if (inspect_result.status == 0) {
-		var range_lines = inspect_result.stdout.toString().trim().split("\r\n");
-		for (let index = 0; index < range_lines.length; index++) {
-			if (range_lines[index].startsWith("{")) {
-				let json_data = JSON.parse(range_lines[index])
-				if (json_data != null) {
-					let RequireCandidates = json_data["RequireCandidates"]
-					if (RequireCandidates && Array.isArray(RequireCandidates)) {
-						let completions = new Array<CompletionItem>()
-						for (let require_name of RequireCandidates) {
-							let item = CompletionItem.create(require_name)
-							item.kind = CompletionItemKind.File
-							completions.push(item)
-						}
-						let completion_array = new Array()
-						completion_array.push({ offset: 1, completions: completions })
-						map_id_completions.set("require", completion_array)
-					}
-					else if (json_data["ErrorType"] && json_data["ErrorType"] == "file") {
-						let error_pos = Position.create(json_data["line"] - 1, json_data["colnum"] - 1)
-						let id_range = Range.create(error_pos, error_pos)
-						diagnostics_array.push(Diagnostic.create(id_range, json_data["msg"], DiagnosticSeverity.Error))
-					}
-					else if (json_data["GlobalCompletions"]) {
-						for (let GlobalNameFields of json_data["GlobalCompletions"]) {
-							if (Array.isArray(GlobalNameFields["Fields"])) {
-								let completions = new Array<CompletionItem>()
-								for (let field_name of GlobalNameFields["Fields"]) {
-									let item = CompletionItem.create(field_name)
-									item.kind = CompletionItemKind.File
-									completions.push(item)
-								}
 
-								if (!map_id_completions.has(GlobalNameFields["Name"])) {
-									let completion_array = new Array()
-									map_id_completions.set(GlobalNameFields["Name"], completion_array)
-								}
-								map_id_completions.get(GlobalNameFields["Name"]).push({ offset: 1, completions: completions })
+	var range_lines = inspect_result.trim().split("\r\n");
+	for (let index = 0; index < range_lines.length; index++) {
+		if (range_lines[index].startsWith("{")) {
+			let json_data = JSON.parse(range_lines[index])
+			if (json_data != null) {
+				let RequireCandidates = json_data["RequireCandidates"]
+				if (RequireCandidates && Array.isArray(RequireCandidates)) {
+					let completions = new Array<CompletionItem>()
+					for (let require_name of RequireCandidates) {
+						let item = CompletionItem.create(require_name)
+						item.kind = CompletionItemKind.File
+						completions.push(item)
+					}
+					map_id_completions.set("require", completions)
+				}
+				else if (json_data["ID_Value_Map"] && Array.isArray(json_data["ID_Value_Map"])) {
+					for (let ID_Value of json_data["ID_Value_Map"]) {
+						let all_completions = new Array<CompletionItem>()
+						for (let name_type of ID_Value.Value) {
+							let item = CompletionItem.create(name_type.Name)
+							if (name_type.Type == "function") {
+								item.kind = CompletionItemKind.Function
+							}
+							else {
+								item.kind = CompletionItemKind.Field
+							}
+							all_completions.push(item)
+						}
+
+						map_id_completions.set(ID_Value.ID, all_completions)
+					}
+				}
+				else if (json_data["ErrorType"] && json_data["ErrorType"] == "file") {
+					let error_pos = Position.create(json_data["line"] - 1, json_data["colnum"] - 1)
+					let id_range = Range.create(error_pos, error_pos)
+					diagnostics_array.push(Diagnostic.create(id_range, json_data["msg"], DiagnosticSeverity.Error))
+				}
+				else if (json_data["GlobalCompletions"] && Array.isArray(json_data["GlobalCompletions"])) {
+					for (let GlobalNameFields of json_data["GlobalCompletions"]) {
+						if (Array.isArray(GlobalNameFields["Fields"])) {
+							let completions = new Array<CompletionItem>()
+							for (let field_name of GlobalNameFields["Fields"]) {
+								let item = CompletionItem.create(field_name)
+								item.kind = CompletionItemKind.File
+								completions.push(item)
+							}
+
+							if (!map_id_completions.has(GlobalNameFields["Name"])) {
+								map_id_completions.set(GlobalNameFields["Name"], completions)
 							}
 						}
 					}
-					else if (json_data["GlobalSignatures"]) {
-						for (let GlobalNameSignature of json_data["GlobalSignatures"]) {
-							if (GlobalNameSignature["Name"] != null && GlobalNameSignature["Signature"]) {
-								let func_name = GlobalNameSignature["Name"]
-								GlobalSignatures.set(func_name, GenerateSignature(func_name, [GlobalNameSignature["Signature"]]))
-							}
+				}
+				else if (json_data["GlobalSignatures"]) {
+					for (let GlobalNameSignature of json_data["GlobalSignatures"]) {
+						if (GlobalNameSignature["Name"] != null && GlobalNameSignature["Signature"]) {
+							let func_name = GlobalNameSignature["Name"]
+							GlobalSignatures.set(func_name, GenerateSignature(func_name, [GlobalNameSignature["Signature"]]))
 						}
 					}
-					else {
-						let start_pos = Position.create(json_data["Line1"] - 1, json_data["Col1"] - 1)
-						let start_offset = the_doc.offsetAt(start_pos)
+				}
+				else {
+					let start_pos = Position.create(json_data["Line1"] - 1, json_data["Col1"] - 1)
+					let start_offset = the_doc.offsetAt(start_pos)
 
-						let end_pos = Position.create(json_data["Line2"] - 1, json_data["Col2"])
-						let end_offset = the_doc.offsetAt(end_pos)
-						let id_range = Range.create(start_pos, end_pos)
+					let end_pos = Position.create(json_data["Line2"] - 1, json_data["Col2"])
+					let end_offset = the_doc.offsetAt(end_pos)
+					let id_range = Range.create(start_pos, end_pos)
 
-						let id_name = the_doc.getText().substring(start_offset, end_offset)
+					let id_name = the_doc.getText().substring(start_offset, end_offset)
 
-						if (json_data["RequirePath"] != null) {
-							let def_pos = Position.create(0, 0)
-							let file_path = json_data["RequirePath"]
-							if (file_path == false) {
-								diagnostics_array.push(Diagnostic.create(id_range, "File didn't exist", DiagnosticSeverity.Error))
-							} else {
-								let def_loc = Location.create(Uri.file(file_path).toString(), Range.create(def_pos, def_pos))
+					if (json_data["RequirePath"] != null) {
+						let def_pos = Position.create(0, 0)
+						let file_path = json_data["RequirePath"]
+						if (file_path == false) {
+							diagnostics_array.push(Diagnostic.create(id_range, "File didn't exist", DiagnosticSeverity.Error))
+						} else {
+							let def_loc = Location.create(Uri.file(file_path).toString(), Range.create(def_pos, def_pos))
+							AddValueProperty(map_range_info, id_range, "Definition", def_loc)
+						}
+					}
+
+					let islocal = false
+					if (json_data["Attributes"] != null) {
+						let isUnused = false
+						let isUnknown = false
+						let isGlobal = false
+
+						for (let attr of json_data["Attributes"]) {
+							if (attr == "local") {
+								islocal = true
+							}
+							else if (attr == "unused") {
+								isUnused = true
+							}
+							else if (attr == "unknown") {
+								isUnknown = true
+							}
+							else if (attr == "global") {
+								isGlobal = true
+							}
+						}
+						if (islocal && isUnused && id_name != "_") {
+							diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unused local variable", DiagnosticSeverity.Warning))
+						}
+						if (isUnknown && isGlobal) {
+							diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unknown global", DiagnosticSeverity.Error))
+						}
+					}
+
+					if (json_data["id"] != null) {
+						AddValueProperty(map_range_info, id_range, "ValueID", json_data["id"])
+					}
+
+					let isfunction = false
+					let isdef = false
+					if (json_data["ValueDesc"] != null) {
+						for (let desc of json_data["ValueDesc"]) {
+							let def_loc_info = desc["LocationDefined"]
+							if (def_loc_info != null) {
+								let file_path = def_loc_info["Path"]
+								if (!path.isAbsolute(file_path)) {
+									file_path = path.join(process.cwd(), file_path)
+								}
+								let def_pos = Position.create(def_loc_info["Line"] - 1, def_loc_info["Col"] - 1)
+								let file_path_uri = Uri.file(file_path).toString()
+								let def_loc = Location.create(file_path_uri, Range.create(def_pos, def_pos))
 								AddValueProperty(map_range_info, id_range, "Definition", def_loc)
-							}
-						}
+								if (def_pos.line == end_pos.line) {
+									isdef = true
+								}
 
-						let islocal = false
-						if (json_data["Attributes"] != null) {
-							let isUnused = false
-							let isUnknown = false
-							let isGlobal = false
-
-							for (let attr of json_data["Attributes"]) {
-								if (attr == "local") {
-									islocal = true
-								}
-								else if (attr == "unused") {
-									isUnused = true
-								}
-								else if (attr == "unknown") {
-									isUnknown = true
-								}
-								else if (attr == "global") {
-									isGlobal = true
+								if (islocal) {
+									let def_loc_info_str = JSON.stringify(def_loc_info)
+									if (!map_loc_highlights.has(def_loc_info_str)) {
+										map_loc_highlights.set(def_loc_info_str, new Array<DocumentHighlight>())
+										map_loc_references.set(def_loc_info_str, new Array<Location>())
+									}
+									map_loc_highlights.get(def_loc_info_str).push(DocumentHighlight.create(id_range))
+									map_loc_references.get(def_loc_info_str).push(Location.create(file_path_uri, id_range))
 								}
 							}
-							if (islocal && isUnused && id_name != "_") {
-								diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unused local variable", DiagnosticSeverity.Warning))
+
+							if (desc["Type"] == "Hint") {
+								if (desc["Value"] != null) {
+									let VarValue = desc["Value"]
+									isfunction = VarValue.startsWith("function")
+									if (VarValue != "nil" && VarValue != "unknown") {
+										AddValueProperty(map_range_info, id_range, "Value", VarValue)
+									}
+								}
 							}
-							if (isUnknown && isGlobal) {
-								diagnostics_array.push(Diagnostic.create(Range.create(start_pos, start_pos), "Unknown global", DiagnosticSeverity.Error))
+							else if (desc["Type"] == "Warning") {
+								diagnostics_array.push(Diagnostic.create(id_range, desc["Value"], DiagnosticSeverity.Warning))
 							}
-						}
-
-						let isfunction = false
-						let isdef = false
-						if (json_data["ValueDesc"] != null) {
-							for (let desc of json_data["ValueDesc"]) {
-								let def_loc_info = desc["LocationDefined"]
-								if (def_loc_info != null) {
-									let file_path = def_loc_info["Path"]
-									if (!path.isAbsolute(file_path)) {
-										file_path = path.join(process.cwd(), file_path)
-									}
-									let def_pos = Position.create(def_loc_info["Line"] - 1, def_loc_info["Col"] - 1)
-									let file_path_uri = Uri.file(file_path).toString()
-									let def_loc = Location.create(file_path_uri, Range.create(def_pos, def_pos))
-									AddValueProperty(map_range_info, id_range, "Definition", def_loc)
-									if (def_pos.line == end_pos.line) {
-										isdef = true
-									}
-
-									if (islocal) {
-										let def_loc_info_str = JSON.stringify(def_loc_info)
-										if (!map_loc_highlights.has(def_loc_info_str)) {
-											map_loc_highlights.set(def_loc_info_str, new Array<DocumentHighlight>())
-											map_loc_references.set(def_loc_info_str, new Array<Location>())
-										}
-										map_loc_highlights.get(def_loc_info_str).push(DocumentHighlight.create(id_range))
-										map_loc_references.get(def_loc_info_str).push(Location.create(file_path_uri, id_range))
-									}
+							else if (desc["Type"] == "Error") {
+								diagnostics_array.push(Diagnostic.create(id_range, desc["Value"], DiagnosticSeverity.Error))
+							}
+							else if (desc["Type"] == "Signature") {
+								let func_prop = null
+								if (desc["Value"]) {
+									func_prop = [desc["Value"]]
 								}
-
-								if (desc["Type"] == "Hint") {
-									if (desc["TableKeys"] != null) {
-										let func_completions = new Array<CompletionItem>()
-										let all_completions = new Array<CompletionItem>()
-										for (let name_type of desc["TableKeys"]) {
-											let item = CompletionItem.create(name_type.Name)
-											if (name_type.Type == "function") {
-												item.kind = CompletionItemKind.Function
-												func_completions.push(item)
-											}
-											else {
-												item.kind = CompletionItemKind.Field
-											}
-											all_completions.push(item)
-										}
-
-										if (!map_id_completions.has(id_name)) {
-											let completion_array = new Array()
-											map_id_completions.set(id_name, completion_array)
-										}
-										map_id_completions.get(id_name).push({ offset: start_offset, func_completions: func_completions, completions: all_completions })
+								if (func_prop != null) {
+									if (!map_id_signatures.has(id_name)) {
+										map_id_signatures.set(id_name, GenerateSignature(id_name, func_prop))
 									}
-									if (desc["Value"] != null) {
-										let VarValue = desc["Value"]
-										isfunction = VarValue.startsWith("function")
-										if (VarValue != "nil" && VarValue != "unknown")
-										{
-											AddValueProperty(map_range_info, id_range, "Value", VarValue)
-										}
-									}
-								}
-								else if (desc["Type"] == "Warning") {
-									diagnostics_array.push(Diagnostic.create(id_range, desc["Value"], DiagnosticSeverity.Warning))
-								}
-								else if (desc["Type"] == "Error") {
-									diagnostics_array.push(Diagnostic.create(id_range, desc["Value"], DiagnosticSeverity.Error))
-								}
-								else if (desc["Type"] == "Signature") {
-									let func_prop = null
-									if (desc["Value"]) {
-										func_prop = [desc["Value"]]
-									}
-									if (func_prop != null) {
-										if (!map_id_signatures.has(id_name)) {
-											map_id_signatures.set(id_name, GenerateSignature(id_name, func_prop))
-										}
-										let sig_info = map_id_signatures.get(id_name)
-										AddValueProperty(map_range_info, id_range, "Signature", sig_info.signatures)
-									}
+									let sig_info = map_id_signatures.get(id_name)
+									AddValueProperty(map_range_info, id_range, "Signature", sig_info.signatures)
 								}
 							}
 						}
+					}
 
-						if (isfunction && isdef) {
-							func_array.push(SymbolInformation.create(id_name, SymbolKind.Function, id_range, the_doc.uri))
-						}
+					if (isfunction && isdef) {
+						func_array.push(SymbolInformation.create(id_name, SymbolKind.Function, id_range, the_doc.uri))
 					}
 				}
 			}
 		}
 	}
-	else {
-		let error_msg = inspect_result.stderr.toString()
-		connection.console.log(`stderr: ${error_msg}\n`);
-		let error_json = JSON.parse(error_msg)
-		if (error_json["ErrorType"] == "syntax") {
-			let error_pos = Position.create(error_json["line"] - 1, error_json["colnum"] - 1)
-			let id_range = Range.create(error_pos, error_pos)
-			diagnostics_array.push(Diagnostic.create(id_range, error_json["msg"], DiagnosticSeverity.Error))
-		}
-	}
+
 	connection.sendDiagnostics(diagnostics_param)
 }
 connection.onDidOpenTextDocument((params) => {
@@ -552,8 +606,10 @@ let func_oncompletion = function (params, token) {
 			let the_substr = document_item.text.substr(0, offset)
 			let id_name = null
 			let seprator = null
+			let id_position = null
 			let matches = the_substr.match(/([\w]*)([.:])[\w]*$/)
 			if (matches != null && matches.length == 3) {
+				id_position = the_doc.positionAt(offset - matches[0].length)
 				id_name = matches[1]
 				seprator = matches[2]
 			}
@@ -562,8 +618,7 @@ let func_oncompletion = function (params, token) {
 				if (matches != null) {
 					id_name = 'require'
 				}
-				else
-				{
+				else {
 					matches = the_substr.match(/AnnotateType[ ]*\(["'](\w*)$/)
 					if (matches != null) {
 						return CustomType_completion_array
@@ -571,36 +626,47 @@ let func_oncompletion = function (params, token) {
 				}
 			}
 
-			if (id_name != null) {
-				let map_id_completions = MapFileCompletions.get(params.textDocument.uri)
-				if (map_id_completions.has(id_name)) {
-					let completion_array = map_id_completions.get(id_name)
-					let min_distance = Number.MAX_SAFE_INTEGER
-					let completions = null
-					for (let offset_completion of completion_array) {
-						if (completions != null && offset < offset_completion.offset) {
+			let map_id_completions = MapFileCompletions.get(params.textDocument.uri)
+			if (id_position != null) {
+				let ValueID = null
+				if (MapFileInfo.has(params.textDocument.uri)) {
+					let map_range_info = MapFileInfo.get(params.textDocument.uri)
+					for (var range_loc of map_range_info) {
+						if (!IsPosInRange(id_position, range_loc[0])) {
+							continue;
+						}
+
+						if (range_loc[1].ValueID) {
+							ValueID = range_loc[1].ValueID
 							break
 						}
-						let cur_distance = Math.abs(offset - offset_completion.offset)
-						if (cur_distance < min_distance) {
-							min_distance = cur_distance
-							if (seprator == ":" && offset_completion.func_completions) {
-								completions = offset_completion.func_completions
-							}
-							else {
-								completions = offset_completion.completions
-							}
-						}
 					}
-
-					if (completions != null) {
+				}
+				if (ValueID != null) {
+					if (map_id_completions.has(ValueID)) {
+						let completions = map_id_completions.get(ValueID)
+						if (seprator == ":") {
+							let func_completions = new Array<CompletionItem>()
+							for (let completion of completions) {
+								if (completion.kind == CompletionItemKind.Function) {
+									func_completions.push(completion)
+								}
+							}
+							return func_completions
+						}
 						return completions
 					}
+				}
+			}
+			else if (id_name != null) {
+				if (map_id_completions.has(id_name)) {
+					return map_id_completions.get(id_name)
 				}
 			}
 		}
 	}
 }
+
 connection.onCompletion(func_oncompletion)
 
 let func_onsignature = function (params, token) {

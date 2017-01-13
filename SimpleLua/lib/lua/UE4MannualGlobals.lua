@@ -92,4 +92,11 @@ return {
             {Name="Var",Type="Any",IsRef=false,HaveDefault=false},
         },
     },
+    AnnotateType = {
+        Value = function() end,
+        Params = {
+            {Name="Type",Type="",IsRef=false,HaveDefault=false},
+            {Name="Var",Type="",IsRef=false,HaveDefault=false},
+        },
+    },
 }

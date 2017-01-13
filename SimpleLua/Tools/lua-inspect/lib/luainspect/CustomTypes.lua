@@ -2,7 +2,7 @@ local LS_Types = require "luainspect.types"
 local LS_Signatures = require "luainspect.signatures"
 local CustomTypes = {}
 
-local function SetStaticTable(TabVar)
+local function SetStaticTable(TabVar, Depth)
     local MetaTable = getmetatable(TabVar)
     if not MetaTable then
         MetaTable = {}
@@ -18,13 +18,21 @@ local function SetStaticTable(TabVar)
         end
     end
     setmetatable(TabVar, MetaTable)
+
+    if Depth > 0 then
+        for _, v in pairs(TabVar) do
+            if type(v) == 'table' then
+                SetStaticTable(v, Depth - 1)
+            end
+        end
+    end
 end
 
 local TypeAnnotateFuncs = {}
 
 TypeAnnotateFuncs.Config = function (VarAst)
     local VarValue = VarAst.localdefinition and VarAst.localdefinition.value
-    SetStaticTable(VarValue)
+    SetStaticTable(VarValue, 3)
 end
 
 local CreateDefaultValueFromTypeInfo
@@ -75,19 +83,19 @@ CreateDefaultValueFromTypeInfo = function (Info, Depth)
             end
         end
     end
-    SetStaticTable(DefaultValue)
+    SetStaticTable(DefaultValue, Depth)
     return DefaultValue
 end
 
 function CustomTypes.GetAnnotateFunc(Type)
     if not TypeAnnotateFuncs[Type] then
-        local DefaultValue = GetDefaultValueFromUE4(Type, 2)
+        local DefaultValue = GetDefaultValueFromUE4(Type, 3)
         if DefaultValue then
             TypeAnnotateFuncs[Type] = function (VarAst)
                 local VarValue = VarAst.localdefinition and VarAst.localdefinition.value
                 if VarValue then
                     VarValue.pWidgetRef = DefaultValue
-                    SetStaticTable(VarValue.pWidgetRef)
+                    SetStaticTable(VarValue.pWidgetRef, 3)
                 end
             end
         end

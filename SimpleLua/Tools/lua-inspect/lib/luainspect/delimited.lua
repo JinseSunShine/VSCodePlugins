@@ -18,14 +18,14 @@ local function escape(s)
 end
 
 
-local function describe(token, tokenlist, src)
+local function describe(token, tokenlist, src, ID_Value_Map)
     if token then
         local ast = token.ast
         if token.tag == 'Id' or ast.isfield then
             local line = {}
             if ast.id then line.id = ast.id end
             line.Attributes = LI.get_var_attributes(ast)
-            line.ValueDesc = LI.get_value_details(ast, tokenlist, src)
+            line.ValueDesc = LI.get_value_details(ast, tokenlist, src, ID_Value_Map)
             return line
         elseif token.tag == 'String' and token.parent and token.parent.tag == 'Call' and token.parent[1].value == require then
             local filename = token.value
@@ -69,10 +69,11 @@ function M.ast_to_delimited(ast, src, tokenlist)
     end
     fmt_tokens[#fmt_tokens + 1] = json.encode({GlobalSignatures = global_signatures})
 
+    local ID_Value_Map = {}
     for _, token in ipairs(tokenlist) do
         local fline_1, fcol_1 = LA.pos_to_linecol(token.fpos, src)
         local fline_2, fcol_2 = LA.pos_to_linecol(token.lpos, src)
-        local desc = describe(token, tokenlist, src)
+        local desc = describe(token, tokenlist, src, ID_Value_Map)
         if desc then
             desc.Line1 = fline_1
             desc.Col1 = fcol_1
@@ -81,6 +82,13 @@ function M.ast_to_delimited(ast, src, tokenlist)
             fmt_tokens[#fmt_tokens + 1] = json.encode(desc)
         end
     end
+
+    local ID_Value_Array = {}
+    for ID, Value in pairs(ID_Value_Map) do
+        table.insert(ID_Value_Array, {ID=ID, Value=Value})
+    end
+    fmt_tokens[#fmt_tokens + 1] = json.encode({ID_Value_Map = ID_Value_Array})
+
     local result = table.concat(fmt_tokens, "\n")
     if result:len() > math.pow(2, 23) then
         result = json.encode({ErrorType="file", line = 1, colnum = 1, msg = "Too big a file"})

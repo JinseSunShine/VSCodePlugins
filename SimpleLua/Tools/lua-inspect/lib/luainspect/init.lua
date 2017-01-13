@@ -1507,7 +1507,7 @@ function M.get_var_attributes(ast)
 end
 
 -- Gets detailed information about value in AST node, as string.
-function M.get_value_details(ast, tokenlist, src)
+function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
     local lines = {}
 
     if not ast then return '?' end
@@ -1524,7 +1524,14 @@ function M.get_value_details(ast, tokenlist, src)
             end
         end
         if #keys > 0 then
-            lines[#lines+1] = {Type="Hint", TableKeys=keys}
+            if ID_Value_Map and ast.id then
+                if not ID_Value_Map[ast.id] then
+                    ID_Value_Map[ast.id] = keys
+                end
+                lines[#lines+1] = {Type="Hint", ValueID=vast.id}
+            else
+                lines[#lines+1] = {Type="Hint", TableKeys=keys}
+            end
         else
             lines[#lines+1] = {Type="Hint", Value=value_str}
         end
