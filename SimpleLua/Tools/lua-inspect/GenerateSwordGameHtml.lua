@@ -22,7 +22,7 @@ if SwordGame_Home then
             end
         end
     end
-    GenerateDir(SwordGame_Home .. "/Scripts/Client/Logic")
+    GenerateDir(SwordGame_Home .. "/Scripts/Client/UI/Prefab/")
     lfs.chdir("..")
     for lua_path, html_path in pairs(Map_lua_html) do
         os.execute(string.format("lua luainspect -fhtml -l%s/htmllib %s > %s", lfs.currentdir(), lua_path, html_path))

@@ -70,7 +70,9 @@ function M.pos_to_linecol(pos, src)
     linenum = linenum + 1
     lasteolpos = eolpos
   end
-  local colnum = pos - lasteolpos
+  local SubStr = string.sub(src, lasteolpos+1, pos)
+  local unicode = require "unicode" 
+  local colnum = unicode.utf8.len(SubStr)
   return linenum, colnum
 end
 

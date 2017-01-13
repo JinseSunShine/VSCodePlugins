@@ -184,6 +184,9 @@ class MockDebugSession extends DebugSession {
 
 			if (data_str.startsWith("Type ")) {
 				this.mobdebugger.stdin.write(`stack\n`);
+				this.clearCache();
+				this.command_list = new Array();
+				this.command_list.push("updatebreakpoints");
 			}
 			else if (data_str.startsWith("Program finished")) {
 				this.sendEvent(new TerminatedEvent());
@@ -193,8 +196,7 @@ class MockDebugSession extends DebugSession {
 
 			else if (data_str.startsWith("{")) {
 				let Json_Data = JSON.parse(data_str)
-				if (Json_Data["MsgType"] == "Eval")
-				{
+				if (Json_Data["MsgType"] == "Eval") {
 					var eval_result = Json_Data["Value"];
 					if (eval_result == "") {
 						eval_result = "not available";
@@ -207,20 +209,17 @@ class MockDebugSession extends DebugSession {
 					}
 					this.debugger_ready = true;
 				}
-				else if (Json_Data["MsgType"] == "Paused")
-				{
+				else if (Json_Data["MsgType"] == "Paused") {
 					this._currentLine = this.convertClientLineToDebugger(Number.parseInt(Json_Data["Line"]));
 					this.mobdebugger.stdin.write(`stack\n`);
 				}
-				else if (Json_Data["MsgType"] == "Stack")
-				{
+				else if (Json_Data["MsgType"] == "Stack") {
 					this.cur_stack_frames = new Array<StackFrame>();
 					let index = 0
-					for (let frame of Json_Data["Frames"])
-					{
+					for (let frame of Json_Data["Frames"]) {
 						this.cur_stack_frames.push(new StackFrame(index, `${frame[0]}(${index})`, new Source(frame[1],
-						this.script_path_map.get(frame[1])),
-						frame[3], 0));
+							this.script_path_map.get(frame[1])),
+							frame[3], 0));
 						index++;
 					}
 					this.sendEvent(new StoppedEvent("breakpoint", MockDebugSession.THREAD_ID));

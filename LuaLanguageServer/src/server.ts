@@ -22,7 +22,34 @@ let documents = new Map();
 
 let fs = require("fs")
 let path = require("path")
-let CandidateFuncs = JSON.parse(fs.readFileSync(path.join(path.dirname(__dirname), "CandidateFuncs.json")))
+
+let CustomType_completion_array = new Array<CompletionItem>()
+const CustomTypesDir = path.join(path.dirname(__dirname), "../lib/lua/CustomTypes");
+
+function GatherCustomTypeCompletions()
+{
+	CustomType_completion_array = new Array<CompletionItem>()
+	for (let Item of fs.readdirSync(CustomTypesDir)) {
+		let abs_path = path.join(CustomTypesDir, Item);
+		let fs_state = fs.statSync(abs_path);
+		if (fs_state.isFile() && Item.endsWith(".lua"))
+		{
+			let type_name = Item.substring(0, Item.length-4)
+			let item = CompletionItem.create(type_name)
+			item.kind = CompletionItemKind.Class
+			CustomType_completion_array.push(item)
+		}
+	}
+}
+
+GatherCustomTypeCompletions()
+fs.watch(CustomTypesDir, (event, filename) =>
+{
+	if(event == 'rename')
+	{
+		GatherCustomTypeCompletions()
+	}
+})
 
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
@@ -332,8 +359,13 @@ let run_lua_inspect = function (document_item) {
 										}
 										map_id_completions.get(id_name).push({ offset: start_offset, func_completions: func_completions, completions: all_completions })
 									}
-									if (desc["Value"] != null && desc["Value"].startsWith("function")) {
-										isfunction = true
+									if (desc["Value"] != null) {
+										let VarValue = desc["Value"]
+										isfunction = VarValue.startsWith("function")
+										if (VarValue != "nil" && VarValue != "unknown")
+										{
+											AddValueProperty(map_range_info, id_range, "Value", VarValue)
+										}
 									}
 								}
 								else if (desc["Type"] == "Warning") {
@@ -346,9 +378,6 @@ let run_lua_inspect = function (document_item) {
 									let func_prop = null
 									if (desc["Value"]) {
 										func_prop = [desc["Value"]]
-									}
-									else if (CandidateFuncs[id_name]) {
-										func_prop = CandidateFuncs[id_name]
 									}
 									if (func_prop != null) {
 										if (!map_id_signatures.has(id_name)) {
@@ -446,6 +475,9 @@ let on_hover = function (params, token) {
 					mark_strings.push(MarkedString.fromPlainText(sig.label))
 				}
 			}
+			else if (range_loc[1].Value) {
+				mark_strings.push(MarkedString.fromPlainText(range_loc[1].Value))
+			}
 			return { contents: mark_strings };
 		}
 	}
@@ -529,6 +561,13 @@ let func_oncompletion = function (params, token) {
 				matches = the_substr.match(/require[ (]*["'](\w*)$/)
 				if (matches != null) {
 					id_name = 'require'
+				}
+				else
+				{
+					matches = the_substr.match(/AnnotateType[ ]*\(["'](\w*)$/)
+					if (matches != null) {
+						return CustomType_completion_array
+					}
 				}
 			}
 

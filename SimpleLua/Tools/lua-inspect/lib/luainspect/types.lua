@@ -6,6 +6,8 @@ T.istype = {}
 -- iserror[o] iff o represents an error type (created via T.error).
 T.iserror = {}
 
+T.IsVSCodeError = {}
+
 -- istabletype[o] iff o represents a table type (created by T.table).
 T.istabletype = {}
 
@@ -75,6 +77,15 @@ function T.error(val)
   return self
 end
 
+-- VSCodeError type
+local VSCodeError = {}; VSCodeError.__index = VSCodeError
+function VSCodeError.__tostring(self) return tostring(self.value) end
+function T.VSCodeError(val)
+  local self = setmetatable({value=val}, VSCodeError)
+  T.istype[self] = true
+  T.IsVSCodeError[self] = true
+  return self
+end
 
 -- Gets a type that is a superset of the two given types.
 function T.superset_types(a, b)

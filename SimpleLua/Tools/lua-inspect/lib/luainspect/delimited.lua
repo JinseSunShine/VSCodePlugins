@@ -82,7 +82,7 @@ function M.ast_to_delimited(ast, src, tokenlist)
         end
     end
     local result = table.concat(fmt_tokens, "\n")
-    if result:len() > math.pow(2, 22) then
+    if result:len() > math.pow(2, 23) then
         result = json.encode({ErrorType="file", line = 1, colnum = 1, msg = "Too big a file"})
     end
     return result

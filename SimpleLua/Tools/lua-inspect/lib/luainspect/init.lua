@@ -411,17 +411,11 @@ end
 local function tastnewindex(t_ast, k_ast, v_ast)
     if known(t_ast.value) and known(k_ast.value) and known(v_ast.value) then
         local _1, _2, _3 = t_ast.value, k_ast.value, v_ast.value
-        if t_ast.localdefinition and t_ast.localdefinition.value then
-            _1 = t_ast.localdefinition.value
-        end
         if _1[_2] ~= nil and _3 ~= _1[_2] and type(_3) ~= type(_1[_2]) then -- multiple values --chenliang3 add type check
             return T.universal
         else
-            if _2 == "hehe" then
-                hehe = 1
-            end
             _1[_2] = _3
-            return _1[_2]
+            return _3
         end
     else
         return T.universal
@@ -655,97 +649,27 @@ local function copytable(table, nDeep)
     return newtable
 end
 
-local UE4WidgetNames =
-{
-    bdr = "Border",
-    btn = "Button",
-    img = "Image",
-    ns = "NamedSlot",
-    pgb = "ProgessBar",
-    sldr = "Slider",
-    txt = "TextBlock",
-    swt = "WidgetSwitcher",
-    trb = "Throbber",
-    ctrb = "CircularThrobber",
-    edt = "EditableText",
-    medt = "EditableText",
-    spr = "Spacer",
-    menu = "MenuAnchor",
-    cvs = "CanvasPanel",
-    grid = "GridPanel",
-    txb = "TextBlock",
-    mtxb = "TextBlock",
-    cmb = "ComboBox",
-    chk = "CheckBox",
-    hbox = "HorizontalBox",
-    scr = "ScrollBox",
-    vbox = "VerticalBox",
-    wrp = "WrapBox",
-    size = "SizeBox",
-    scl = "ScaleBox",
-    ivd = "InvaildationBox",
-    rtn = "RetainerBox",
-    pb = "Prefab",
-    Widget = "Widget",
-}
-
-local function AddSignature(func, func_params)
-    local param_min, param_max = 0, 0
-    local params = {}
-    local types = {}
-    for _, param_prop in pairs(func_params) do
-        table.insert(params, param_prop.Name)
-        table.insert(types, param_prop.Type)
-        param_max = param_max + 1
-        if not param_prop.IsRef and not param_prop.HaveDefault then
-            param_min = param_max
-        end
-    end
-    LS.value_signatures[func] = {Params=params, Types=types}
-    return param_min, param_max
-end
-
-local Map_Widget_Funcs = {}
-local function GetUE4WidgetFuncs(widget_name)
-
-    local widget_fullname
-    for w_name, w_fullname in pairs(UE4WidgetNames) do
-        if widget_name:match("^"..w_name) then
-            widget_fullname = w_fullname
-            break
-        end
-    end
-
-    if widget_fullname then
-        if Map_Widget_Funcs[widget_fullname] then
-            return Map_Widget_Funcs[widget_fullname]
-        end
-        local UE4 = require "UE4"
-        local funcs = {}
-        if UE4.ClassDefs[widget_fullname] then
-            for k, func_prop in pairs(UE4.ClassDefs[widget_fullname].FuncDefs) do
-                local func = function() end
-                local param_min, param_max = AddSignature(func, func_prop.Params)
-                LS.argument_counts[func]={param_min+1, param_max+1} -- add self
-                funcs[k] = func
-            end
-        end
-        Map_Widget_Funcs[widget_fullname] = funcs
-        return funcs
-    end
-end
-
 local UE4Globals = nil
-function M.GetGlobalsFromUE4()
+function M.GetGlobalsFromUE4(InitGlobals)
     if UE4Globals then
         return UE4Globals
     end
 
-    UE4Globals = {}
-    local UE4 = require "UE4"
-    for k, v in pairs(UE4.Globals) do
-        UE4Globals[k] = v
+    if InitGlobals then
+        UE4Globals = InitGlobals
+    else
+        UE4Globals = {}
     end
+
+    local UE4MannualGlobals = require "UE4MannualGlobals"
+    for k, Info in pairs(UE4MannualGlobals) do
+        UE4Globals[k] = Info.Value
+        if Info.Params then
+            LS.AddSignature(Info.Value, Info.Params, true)
+        end
+    end
+
+    local UE4 = require "UE4"
     for k, v in pairs(UE4.EnumDefs) do
         UE4Globals[k] = v
     end
@@ -754,14 +678,11 @@ function M.GetGlobalsFromUE4()
     end
     for class, class_def in pairs(UE4.ClassDefs) do
         local static_funcs = {}
-        local bHaveStatic = false
         for func_name, func_prop in pairs(class_def.FuncDefs) do
             if func_prop.IsStatic then
                 local func = function () end
-                local param_min, param_max = AddSignature(func, func_prop.Params)
-                LS.argument_counts[func]={param_min, param_max}
+                LS.AddSignature(func, func_prop.Params, func_prop.IsStatic)
                 static_funcs[func_name] = func
-                bHaveStatic = true
             end
         end
         UE4Globals[class] = static_funcs
@@ -793,13 +714,7 @@ end
 -- Sets top_ast.valueglobals, ast.value, ast.valueself
 -- CATEGORY: code interpretation
 function M.infer_values(top_ast, tokenlist, src, report, nPass)
-    if not top_ast.valueglobals then top_ast.valueglobals = {} end
-    local ue4globas = M.GetGlobalsFromUE4()
-    for k,v in pairs(ue4globas) do
-        if top_ast.valueglobals[k] == nil then
-            top_ast.valueglobals[k] = v
-        end
-    end
+    if not top_ast.valueglobals then top_ast.valueglobals = M.GetGlobalsFromUE4() end
 
     local IsTopLevelRequire = function(require_ast)
         for _, ast in ipairs(top_ast) do
@@ -945,30 +860,21 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local ok; ok, ast.valueself = pzcall(tindex, {ast[1], ast[2]}, t, k)
                 if not ok then ast.valueself = T.error(ast.valueself) end
             end
-        elseif ast[1][1] == 'SetType' then
-            local VarDef = ast[2] and ast[2].localdefinition and ast[2].localdefinition.value
-            local VarType = ast[3] and ast[3].value
-            local HaveError = false
-            if not VarType or unknown(VarType) then
-                set_value(ast[3], T.error("Can't find Type"))
-                HaveError = true
-            end
-            if not VarDef or unknown(VarDef) then
-                set_value(ast[2], T.error("Can't find definition"))
-                HaveError = true
-            end
-            if not HaveError then
-                local MetaTable = getmetatable(VarDef)
-                if not MetaTable then
-                    MetaTable = {}
+        elseif ast[1][1] == 'AnnotateType' then
+            local VarType = ast[2] and ast[2].value
+            local VarDef = ast[3]
+            local CustomTypes = require "luainspect.CustomTypes"
+            if not VarDef or not VarType then
+                ast.note = "Need 2 Params"
+            elseif type(VarType) ~= "string" then
+                ast.note = "Param 1 should be string"
+            else
+                local AnnotateFunc = CustomTypes.GetAnnotateFunc(VarType)
+                if AnnotateFunc then
+                    AnnotateFunc(VarDef)
+                else
+                    ast.note = "Invalid type"
                 end
-                MetaTable.__index = function() 
-                    return T.error("hehe") 
-                end
-                MetaTable.__newindex = function(Table, Key)  
-                    Table[Key] = T.error("hehe") 
-                end
-                setmetatable(VarDef, MetaTable)
             end
         end
         local func; if isinvoke then func = ast.valueself else func = ast[1].value end
@@ -1609,7 +1515,7 @@ function M.get_value_details(ast, tokenlist, src)
     local vast = ast.seevalue or ast
 
     local value_str = tostring(vast.value)
-    if type(vast.value) == 'table' and vast.localdefinition == vast and vast.value["__tostring"] == nil then
+    if type(vast.value) == 'table' and type(vast.value["__tostring"]) ~= 'function' then
         local keys = {}
         for k, v in pairs(vast.value) do
             k = tostring(k)
@@ -1622,8 +1528,10 @@ function M.get_value_details(ast, tokenlist, src)
         else
             lines[#lines+1] = {Type="Hint", Value=value_str}
         end
-    elseif T.iserror[vast.value] then
+    elseif T.IsVSCodeError[vast.value] then
         lines[#lines+1] = {Type="Error", Value=value_str}
+    elseif T.iserror[vast.value] then
+        lines[#lines+1] = {Type="LuaInspectError", Value=value_str}
     else
         lines[#lines+1] = {Type="Hint", Value=value_str}
     end

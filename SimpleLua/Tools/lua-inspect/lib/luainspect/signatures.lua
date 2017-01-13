@@ -2,11 +2,33 @@ local M = {}
 
 local T = require "luainspect.types"
 
+function M.AddSignature(func, func_params, IsStatic)
+    local param_min, param_max = 1, 1
+    if IsStatic then
+        param_min, param_max = 0, 0
+    end
+    local params = {}
+    local types = {}
+    for _, param_prop in pairs(func_params) do
+        table.insert(params, param_prop.Name)
+        table.insert(types, param_prop.Type)
+        param_max = param_max + 1
+        if param_prop.Name == '...' then
+            param_max = math.huge
+            break
+        elseif not param_prop.IsRef and not param_prop.HaveDefault then
+            param_min = param_max
+        end
+    end
+    M.value_signatures[func] = {Params=params, Types=types}
+    M.argument_counts[func]={param_min, param_max}
+end
+
 -- chenliang3
+_G.AnnotateType = function() end
 -- hack to compat lua53
 math.tointeger = function() return 1 end
 table.unpack = function() end
-
 -- end hack to compat lua53
 
 -- signatures of known globals
@@ -48,6 +70,7 @@ M.global_signatures = {
     package = "(table) package library",
     string = "(table) string manipulation library",
     table = "(table) table manipulation library",
+    AnnotateType = { Params = {"Type", "Var"}},
     ["coroutine.create"] = { Params = { "f" }},
     ["coroutine.resume"] = { Params = { "co", "val1", "..." }},
     ["coroutine.running"] = { Params = { }},
@@ -195,6 +218,7 @@ M.argument_counts = {
     [setmetatable] = {2,2},
     [tonumber] = {1,2},
     [tostring] = {1},
+    [_G.AnnotateType] = {2, 2},
     [type] = {1},
     [unpack] = {1,3},
     [xpcall] = {2,2},

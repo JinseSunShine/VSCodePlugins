@@ -6,7 +6,7 @@
 package.path = package.path .. ';metalualib/?.lua'
 package.path = package.path .. ';lib/?.lua'
 
--- require("mobdebug").start(nil, require("mobdebug").port + 1)
+require("mobdebug").start(nil, require("mobdebug").port + 1)
 
 local function loadfile(filename)
     local fh = assert(io.open(filename, 'r'))
@@ -121,6 +121,7 @@ local ast, err, linenum, colnum, linenum2 = LA.ast_from_string(src, path)
 --require "metalua.table2"; table.print(ast, 'hash', 50)
 if ast then
     local tokenlist = LA.ast_to_tokenlist(ast, src)
+
     LI.inspect(ast, tokenlist, src, report, 1)
     LI.inspect(ast, tokenlist, src, report, 2)
     LI.mark_related_keywords(ast, tokenlist, src)
