@@ -24,6 +24,7 @@ let fs = require("fs")
 let path = require("path")
 
 let CustomType_completion_array = new Array<CompletionItem>()
+const UE4Lua = path.join(path.dirname(__dirname), "../lib/lua/UE4.lua");
 const CustomTypesDir = path.join(path.dirname(__dirname), "../lib/lua/CustomTypes");
 
 function GatherCustomTypeCompletions() {
@@ -55,6 +56,10 @@ fs.watch(CustomTypesDir, (event, filename) => {
 	if (event == 'rename') {
 		GatherCustomTypeCompletions()
 	}
+	ReRunLuaInspect()
+})
+
+fs.watch(UE4Lua, (event, filename) => {
 	ReRunLuaInspect()
 })
 
@@ -179,9 +184,15 @@ function GenerateSignature(id_name, signature_array) {
 const child_process = require('child_process');
 
 let File_LuaInspect_Map = new Map()
+let CachedTaskToRun_Map = new Map()
 
 let run_lua_inspect = function (document_item) {
-	if (!File_LuaInspect_Map.has(document_item.uri)) {
+	if (!File_LuaInspect_Map.has(document_item.uri) && !CachedTaskToRun_Map.has(document_item.uri)) {
+		if (File_LuaInspect_Map.size >= 6)
+		{
+			CachedTaskToRun_Map.set(document_item.uri, document_item)
+			return
+		}
 		let the_doc = TextDocument.create(document_item.uri, document_item.languageId, document_item.version, document_item.text)
 		var file_path = Files.uriToFilePath(the_doc.uri)
 		const working_dir = path.join(path.dirname(__dirname), "../Tools");
@@ -232,6 +243,19 @@ let run_lua_inspect = function (document_item) {
 				}
 			}
 			File_LuaInspect_Map.delete(document_item.uri)
+
+			if (CachedTaskToRun_Map.size > 0)
+			{
+				let KeyToDelete, doc_item
+				for (let [k, v] of CachedTaskToRun_Map)
+				{
+					KeyToDelete = k
+					doc_item = v
+					break
+				}
+				CachedTaskToRun_Map.delete(KeyToDelete)
+				run_lua_inspect(doc_item)
+			}
 		})
 
 		File_LuaInspect_Map.set(document_item.uri, {PS:lua_inspect_ps})
@@ -291,21 +315,23 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 					}
 					map_id_completions.set("require", completions)
 				}
-				else if (json_data["ID_Value_Map"] && Array.isArray(json_data["ID_Value_Map"])) {
-					for (let ID_Value of json_data["ID_Value_Map"]) {
-						let all_completions = new Array<CompletionItem>()
-						for (let name_type of ID_Value.Value) {
-							let item = CompletionItem.create(name_type.Name)
-							if (name_type.Type == "function") {
-								item.kind = CompletionItemKind.Function
+				else if (json_data["ID_Value_Map"]) {
+					if (Array.isArray(json_data["ID_Value_Map"])) {
+						for (let ID_Value of json_data["ID_Value_Map"]) {
+							let all_completions = new Array<CompletionItem>()
+							for (let name_type of ID_Value.Value) {
+								let item = CompletionItem.create(name_type.Name)
+								if (name_type.Type == "function") {
+									item.kind = CompletionItemKind.Function
+								}
+								else {
+									item.kind = CompletionItemKind.Field
+								}
+								all_completions.push(item)
 							}
-							else {
-								item.kind = CompletionItemKind.Field
-							}
-							all_completions.push(item)
-						}
 
-						map_id_completions.set(ID_Value.ID, all_completions)
+							map_id_completions.set(ID_Value.ID, all_completions)
+						}
 					}
 				}
 				else if (json_data["ErrorType"] && json_data["ErrorType"] == "file") {

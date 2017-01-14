@@ -19,8 +19,20 @@ export function activate(context: vscode.ExtensionContext) {
         const spawn = require('child_process').spawn;
         const bat = spawn('C:\\Windows\\gvim.bat', [param.fsPath]);
     });
-
     context.subscriptions.push(disposable);
+
+    let disposable_OpenAllLuaScripts = vscode.commands.registerCommand('extension.OpenAllLuaScripts', (param) => {
+        let allfiles = vscode.workspace.findFiles("**/*.lua", "")
+        allfiles.then(
+            (result: vscode.Uri[]) => {
+                result.forEach(function (value, index, array) {
+                    vscode.workspace.openTextDocument(value);
+                })
+            }
+        )
+    });
+
+    context.subscriptions.push(disposable_OpenAllLuaScripts);
 }
 
 // this method is called when your extension is deactivated
