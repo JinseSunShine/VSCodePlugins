@@ -2,6 +2,7 @@
 node_modules/
 out/
 npm-debug.log
-lib/lua/CustomTypes
+lib/lua/CustomTypes/UI_*
+lib/lua/CustomTypes/UP_*
 lib/lua/UE4.lua
 snippets/UE4Snippets.json

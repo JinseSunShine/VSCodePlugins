@@ -1,38 +1,14 @@
-local LS_Types = require "luainspect.types"
 local LS_Signatures = require "luainspect.signatures"
+local CommonUtils = require "CommonUtils"
+
 local CustomTypes = {}
-
-local function SetStaticTable(TabVar, Depth)
-    local MetaTable = getmetatable(TabVar)
-    if not MetaTable then
-        MetaTable = {}
-    end
-    MetaTable.__index = function(Table, Key)
-        if Key ~= nil then
-            return LS_Types.VSCodeError("Non Exist Key")
-        end
-    end
-    MetaTable.__newindex = function(Table, Key)
-        if Key ~= nil then
-            Table[Key] = LS_Types.VSCodeError("Non Exist Key")
-        end
-    end
-    setmetatable(TabVar, MetaTable)
-
-    if Depth > 0 then
-        for _, v in pairs(TabVar) do
-            if type(v) == 'table' then
-                SetStaticTable(v, Depth - 1)
-            end
-        end
-    end
-end
-
 local TypeAnnotateFuncs = {}
 
-TypeAnnotateFuncs.Config = function (VarAst)
-    local VarValue = VarAst.localdefinition and VarAst.localdefinition.value
-    SetStaticTable(VarValue, 3)
+local function GetMannualType(TypeName)
+    local bSuccess, ResultOrError = pcall(require, string.format("CustomTypes.%s", TypeName))
+    if bSuccess then
+        return ResultOrError
+    end
 end
 
 local CreateDefaultValueFromTypeInfo
@@ -83,25 +59,35 @@ CreateDefaultValueFromTypeInfo = function (Info, Depth)
             end
         end
     end
-    SetStaticTable(DefaultValue, Depth)
+    CommonUtils.SetStaticTable(DefaultValue, Depth)
     return DefaultValue
 end
 
 function CustomTypes.GetAnnotateFunc(Type)
-    if not TypeAnnotateFuncs[Type] then
+    if TypeAnnotateFuncs[Type] then
+        return TypeAnnotateFuncs[Type]
+    end
+
+    if string.match(Type, "^U[IP]_") then
         local DefaultValue = GetDefaultValueFromUE4(Type, 3)
         if DefaultValue then
             TypeAnnotateFuncs[Type] = function (VarAst)
                 local VarValue = VarAst.localdefinition and VarAst.localdefinition.value
                 if VarValue then
                     VarValue.pWidgetRef = DefaultValue
-                    SetStaticTable(VarValue.pWidgetRef, 3)
+                    CommonUtils.SetStaticTable(VarValue.pWidgetRef, 3)
                 end
             end
+            return TypeAnnotateFuncs[Type]
         end
     end
 
-    return TypeAnnotateFuncs[Type]
+    local AnnotateFunc = GetMannualType(Type)
+    if AnnotateFunc then
+        TypeAnnotateFuncs[Type] = AnnotateFunc
+        return TypeAnnotateFuncs[Type]
+    end
+
 end
 
 return CustomTypes

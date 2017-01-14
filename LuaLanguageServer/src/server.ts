@@ -29,16 +29,12 @@ const CustomTypesDir = path.join(path.dirname(__dirname), "../lib/lua/CustomType
 function GatherCustomTypeCompletions() {
 	CustomType_completion_array = new Array<CompletionItem>()
 
-	let item = CompletionItem.create("Config")
-	item.kind = CompletionItemKind.Class
-	CustomType_completion_array.push(item)
-
 	for (let Item of fs.readdirSync(CustomTypesDir)) {
 		let abs_path = path.join(CustomTypesDir, Item);
 		let fs_state = fs.statSync(abs_path);
 		if (fs_state.isFile() && Item.endsWith(".lua")) {
 			let type_name = Item.substring(0, Item.length - 4)
-			item = CompletionItem.create(type_name)
+			let item = CompletionItem.create(type_name)
 			item.kind = CompletionItemKind.Class
 			CustomType_completion_array.push(item)
 		}
