@@ -7,12 +7,12 @@ function CommonUtils.SetStaticTable(TabVar, Depth)
         MetaTable = {}
     end
     MetaTable.__index = function(Table, Key)
-        if Key ~= nil then
+        if type(Key) == "string" and Key ~= "unknown" then
             return LS_Types.VSCodeError("Non Exist Key")
         end
     end
     MetaTable.__newindex = function(Table, Key)
-        if Key ~= nil then
+        if type(Key) == "string" and Key ~= "unknown" then
             Table[Key] = LS_Types.VSCodeError("Non Exist Key")
         end
     end
