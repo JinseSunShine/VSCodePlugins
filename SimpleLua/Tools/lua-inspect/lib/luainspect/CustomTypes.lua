@@ -13,6 +13,10 @@ end
 
 local CreateDefaultValueFromTypeInfo
 local function GetDefaultValueFromUE4(TypeName, Depth)
+    if "UPanelSlot*" == TypeName then -- Hack to adapt the slot problem
+        TypeName = "UCanvasPanelSlot*"
+    end
+
     if string.match(TypeName, "%*$") then
         TypeName = string.sub(TypeName, 2, -2)
     end
@@ -75,7 +79,7 @@ function CustomTypes.GetAnnotateFunc(Type)
                 local VarValue = VarAst.localdefinition and VarAst.localdefinition.value
                 if VarValue then
                     VarValue.pWidgetRef = DefaultValue
-                    CommonUtils.SetStaticTable(VarValue.pWidgetRef, 3)
+                    CommonUtils.SetStaticTable(VarValue.pWidgetRef, 3, true)
                 end
             end
             return TypeAnnotateFuncs[Type]

@@ -44,10 +44,8 @@ function GatherCustomTypeCompletions() {
 
 GatherCustomTypeCompletions()
 
-function ReRunLuaInspect()
-{
-	for(let [k, doc_item] of documents)
-	{
+function ReRunLuaInspect() {
+	for (let [k, doc_item] of documents) {
 		run_lua_inspect(doc_item)
 	}
 }
@@ -188,8 +186,7 @@ let CachedTaskToRun_Map = new Map()
 
 let run_lua_inspect = function (document_item) {
 	if (!File_LuaInspect_Map.has(document_item.uri) && !CachedTaskToRun_Map.has(document_item.uri)) {
-		if (File_LuaInspect_Map.size >= 6)
-		{
+		if (File_LuaInspect_Map.size >= 6) {
 			CachedTaskToRun_Map.set(document_item.uri, document_item)
 			return
 		}
@@ -202,17 +199,15 @@ let run_lua_inspect = function (document_item) {
 		const lua_inspect_ps = child_process.spawn('lua', ['lua-inspect/luainspect', file_path]);
 		lua_inspect_ps.stdout.on('data', (data) => {
 			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
-			if (PS_Out_Err.Out == null)
-			{
+			if (PS_Out_Err.Out == null) {
 				PS_Out_Err.Out = ""
 			}
-			PS_Out_Err.Out += data.toString()	
+			PS_Out_Err.Out += data.toString()
 		});
 
 		lua_inspect_ps.stderr.on('data', (data) => {
 			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
-			if (PS_Out_Err.Err == null)
-			{
+			if (PS_Out_Err.Err == null) {
 				PS_Out_Err.Err = ""
 			}
 			PS_Out_Err.Err += data.toString()
@@ -220,12 +215,10 @@ let run_lua_inspect = function (document_item) {
 
 		lua_inspect_ps.on('close', (code) => {
 			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
-			if (code == 0)
-			{
+			if (code == 0) {
 				Parse_Inspect_Result(document_item, PS_Out_Err.Out)
 			}
-			else
-			{
+			else {
 				let error_msg = PS_Out_Err.Err
 				connection.console.log(`stderr: ${error_msg}\n`);
 				let error_json = JSON.parse(error_msg)
@@ -244,11 +237,9 @@ let run_lua_inspect = function (document_item) {
 			}
 			File_LuaInspect_Map.delete(document_item.uri)
 
-			if (CachedTaskToRun_Map.size > 0)
-			{
+			if (CachedTaskToRun_Map.size > 0) {
 				let KeyToDelete, doc_item
-				for (let [k, v] of CachedTaskToRun_Map)
-				{
+				for (let [k, v] of CachedTaskToRun_Map) {
 					KeyToDelete = k
 					doc_item = v
 					break
@@ -258,7 +249,7 @@ let run_lua_inspect = function (document_item) {
 			}
 		})
 
-		File_LuaInspect_Map.set(document_item.uri, {PS:lua_inspect_ps})
+		File_LuaInspect_Map.set(document_item.uri, { PS: lua_inspect_ps })
 	}
 }
 
@@ -679,10 +670,10 @@ let func_oncompletion = function (params, token) {
 						return completions
 					}
 				}
-			}
-			else if (id_name != null) {
-				if (map_id_completions.has(id_name)) {
-					return map_id_completions.get(id_name)
+				else if (id_name != null) {
+					if (map_id_completions.has(id_name)) {
+						return map_id_completions.get(id_name)
+					}
 				}
 			}
 		}
