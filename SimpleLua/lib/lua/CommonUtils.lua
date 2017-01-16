@@ -28,7 +28,7 @@ function CommonUtils.SetStaticTable(TabVar, Depth, IgnoreCase)
     if Depth > 0 then
         for _, v in pairs(TabVar) do
             if type(v) == 'table' then
-                CommonUtils.SetStaticTable(v, Depth - 1)
+                CommonUtils.SetStaticTable(v, Depth - 1, IgnoreCase)
             end
         end
     end
