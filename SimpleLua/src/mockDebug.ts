@@ -183,10 +183,11 @@ class MockDebugSession extends DebugSession {
 			var data_str = data.toString();
 
 			if (data_str.startsWith("Type ")) {
-				this.mobdebugger.stdin.write(`stack\n`);
+				this.debugger_ready = true;
 				this.clearCache();
 				this.command_list = new Array();
 				this.command_list.push("updatebreakpoints");
+				this.command_list.push("run\n");
 			}
 			else if (data_str.startsWith("Program finished")) {
 				this.sendEvent(new TerminatedEvent());
