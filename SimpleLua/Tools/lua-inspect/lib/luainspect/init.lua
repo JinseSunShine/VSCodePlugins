@@ -654,12 +654,8 @@ function M.GetGlobalsFromUE4()
     if UE4Globals then
         return UE4Globals
     end
-
-    if InitGlobals then
-        UE4Globals = InitGlobals
-    else
-        UE4Globals = {}
-    end
+    
+    UE4Globals = {}
 
     local UE4MannualGlobals = require "UE4MannualGlobals"
     for k, Info in pairs(UE4MannualGlobals) do
@@ -669,23 +665,25 @@ function M.GetGlobalsFromUE4()
         end
     end
 
-    local UE4 = require "UE4"
-    for k, v in pairs(UE4.EnumDefs) do
-        UE4Globals[k] = v
-    end
-    for k, struct in pairs(UE4.StructDefs) do
-        UE4Globals[k] = struct.FieldDefs
-    end
-    for class, class_def in pairs(UE4.ClassDefs) do
-        local static_funcs = {}
-        for func_name, func_prop in pairs(class_def.FuncDefs) do
-            if func_prop.IsStatic then
-                local func = function () end
-                LS.AddSignature(func, func_prop.Params, func_prop.IsStatic)
-                static_funcs[func_name] = func
-            end
+    local bSuccess, UE4 = pcall(require, "UE4")
+    if bSuccess then
+        for k, v in pairs(UE4.EnumDefs) do
+            UE4Globals[k] = v
         end
-        UE4Globals[class] = static_funcs
+        for k, struct in pairs(UE4.StructDefs) do
+            UE4Globals[k] = struct.FieldDefs
+        end
+        for class, class_def in pairs(UE4.ClassDefs) do
+            local static_funcs = {}
+            for func_name, func_prop in pairs(class_def.FuncDefs) do
+                if func_prop.IsStatic then
+                    local func = function () end
+                    LS.AddSignature(func, func_prop.Params, func_prop.IsStatic)
+                    static_funcs[func_name] = func
+                end
+            end
+            UE4Globals[class] = static_funcs
+        end
     end
     return UE4Globals
 end

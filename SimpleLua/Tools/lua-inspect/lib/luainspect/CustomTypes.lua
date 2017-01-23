@@ -21,15 +21,17 @@ local function GetDefaultValueFromUE4(TypeName, Depth)
         TypeName = string.sub(TypeName, 2, -2)
     end
 
-    local UE4 = require "UE4"
-    local DefInfo = UE4.StructDefs[TypeName] or UE4.ClassDefs[TypeName]
-    if DefInfo then
-        return CreateDefaultValueFromTypeInfo(DefInfo, Depth)
-    end
-
-    local bSuccess, ResultOrError = pcall(require, string.format("CustomTypes.%s", TypeName))
+    local bSuccess, UE4 = pcall(require, "UE4")
     if bSuccess then
-        return CreateDefaultValueFromTypeInfo(ResultOrError, Depth)
+        local DefInfo = UE4.StructDefs[TypeName] or UE4.ClassDefs[TypeName]
+        if DefInfo then
+            return CreateDefaultValueFromTypeInfo(DefInfo, Depth)
+        end
+
+        local bSuccess, ResultOrError = pcall(require, string.format("CustomTypes.%s", TypeName))
+        if bSuccess then
+            return CreateDefaultValueFromTypeInfo(ResultOrError, Depth)
+        end
     end
 end
 

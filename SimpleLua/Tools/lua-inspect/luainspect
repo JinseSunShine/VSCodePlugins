@@ -12,6 +12,7 @@ end
 local bin = findbin()
 package.path = package.path..';'..bin..'/metalualib/?.lua'
 package.path = package.path..';'..bin..'/lib/?.lua'
+package.path = package.path..';'..bin..'/../../../SimpleLuaLib/?.lua'
 
 require 'luainspect.command'
 

@@ -24,25 +24,8 @@ let fs = require("fs")
 let path = require("path")
 
 let CustomType_completion_array = new Array<CompletionItem>()
-const UE4Lua = path.join(path.dirname(__dirname), "../lib/lua/UE4.lua");
-const CustomTypesDir = path.join(path.dirname(__dirname), "../lib/lua/CustomTypes");
-
-function GatherCustomTypeCompletions() {
-	CustomType_completion_array = new Array<CompletionItem>()
-
-	for (let Item of fs.readdirSync(CustomTypesDir)) {
-		let abs_path = path.join(CustomTypesDir, Item);
-		let fs_state = fs.statSync(abs_path);
-		if (fs_state.isFile() && Item.endsWith(".lua")) {
-			let type_name = Item.substring(0, Item.length - 4)
-			let item = CompletionItem.create(type_name)
-			item.kind = CompletionItemKind.Class
-			CustomType_completion_array.push(item)
-		}
-	}
-}
-
-GatherCustomTypeCompletions()
+const UE4Lua = path.join(path.dirname(__dirname), "../../SimpleLuaLib/UE4.lua");
+const CustomTypesDir = path.join(path.dirname(__dirname), "../../SimpleLuaLib/CustomTypes");
 
 function ReRunLuaInspect() {
 	for (let [k, doc_item] of documents) {
@@ -50,16 +33,40 @@ function ReRunLuaInspect() {
 	}
 }
 
-fs.watch(CustomTypesDir, (event, filename) => {
-	if (event == 'rename') {
-		GatherCustomTypeCompletions()
-	}
-	ReRunLuaInspect()
-})
+if (fs.existsSync(CustomTypesDir))
+{
+	function GatherCustomTypeCompletions() {
+		CustomType_completion_array = new Array<CompletionItem>()
 
-fs.watch(UE4Lua, (event, filename) => {
-	ReRunLuaInspect()
-})
+		fs.readdir(CustomTypesDir, (err, files) => {
+			if (err) return;
+			for (let Item of files) {
+				let abs_path = path.join(CustomTypesDir, Item);
+				let fs_state = fs.statSync(abs_path);
+				if (fs_state.isFile() && Item.endsWith(".lua")) {
+					let type_name = Item.substring(0, Item.length - 4)
+					let item = CompletionItem.create(type_name)
+					item.kind = CompletionItemKind.Class
+					CustomType_completion_array.push(item)
+				}
+			}
+		})
+	}
+	GatherCustomTypeCompletions()
+	fs.watch(CustomTypesDir, (event, filename) => {
+		if (event == 'rename') {
+			GatherCustomTypeCompletions()
+		}
+		ReRunLuaInspect()
+	})
+}
+
+if (fs.existsSync(UE4Lua))
+{
+	fs.watch(UE4Lua, (event, filename) => {
+		ReRunLuaInspect()
+	})
+}
 
 // After the server has started the client sends an initilize request. The server receives
 // in the passed params the rootPath of the workspace plus the client capabilites. 
