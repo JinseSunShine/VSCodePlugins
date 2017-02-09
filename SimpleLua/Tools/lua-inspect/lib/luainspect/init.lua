@@ -235,6 +235,10 @@ function M.clear_cache()
     end
 end
 
+local function GetFunctionNote(vast)
+    return type(vast.value) == 'function' and vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke')
+        and vast.parent.note
+end
 
 -- Gets all keywords related to AST `ast`, where `top_ast` is the root of `ast`
 -- and `src` is source code of `top_ast`
@@ -685,6 +689,14 @@ function M.GetGlobalsFromUE4()
             UE4Globals[class] = static_funcs
         end
     end
+
+    local CommonUtils = require "CommonUtils"
+    for _, VarValue in pairs(UE4Globals) do
+        if type(VarValue) == "table" then
+            CommonUtils.SetStaticTable(VarValue, 3, true)
+        end
+    end
+
     return UE4Globals
 end
 
@@ -1313,7 +1325,6 @@ function M.inspect(top_ast, tokenlist, src, report, nPass)
                 local nargmin, nargmax = call_arg_range(ast)
                 --print('DEBUG:', nparammin, nparammax, nargmin, nargmax)
                 local iswarn
-                local target_ast = ast.tag == 'Call' and ast[1] or ast[2]
                 if (nargmax or math.huge) < nparammin then
                     ast.note = "Too few arguments.  "
                     iswarn = true
@@ -1496,8 +1507,7 @@ function M.get_var_attributes(ast)
     else
         attributes[#attributes+1] = "FIX" -- shouldn't happen?
     end
-    if vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke')
-        and vast.parent.note
+    if GetFunctionNote(vast)
     then
         attributes[#attributes+1] = 'warn'
     end
@@ -1573,11 +1583,10 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         local kind = sig:find '%w%s*%b()$'  and 'signature' or 'description'
         lines[#lines+1] = kind .. ": " .. sig
     end
-    if vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke') then
-        if vast.parent.note then
-            -- Render warning notes attached to calls/invokes.
-            lines[#lines+1] = {Type="Warning", Value=vast.parent.note}
-        end
+
+    local func_note = GetFunctionNote(vast)
+    if func_note then
+        lines[#lines+1] = {Type="Warning", Value=func_note}
         if not sig then
             lines[#lines+1] = {Type="Signature"}
         end
@@ -1615,8 +1624,7 @@ function M.list_warnings(tokenlist, src)
                 warn("unknown global " .. ast[1])
             end
             local vast = ast.seevalue or ast
-            local note = vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke')
-                and vast.parent.note
+            local note = GetFunctionNote(vast)
             if note and not isseen[vast.parent] then
                 isseen[vast.parent] = true
                 local esrc = LA.ast_to_text(vast.parent, tokenlist, src)

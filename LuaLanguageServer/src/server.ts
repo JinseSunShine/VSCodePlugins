@@ -540,17 +540,15 @@ let on_hover = function (params, token) {
 					file_path = path.relative(workspaceRoot, file_path)
 					mark_strings.push(MarkedString.fromPlainText(`Defined at ${file_path}`))
 				}
-			}
-			if (range_loc[1].Signature) {
-				if (!range_loc[1].Definition) {
-					mark_strings.push(MarkedString.fromPlainText("Possible Signature:"))
+
+				if (range_loc[1].Signature) {
+					for (let sig of range_loc[1].Signature) {
+						mark_strings.push(MarkedString.fromPlainText(sig.label))
+					}
 				}
-				for (let sig of range_loc[1].Signature) {
-					mark_strings.push(MarkedString.fromPlainText(sig.label))
+				else if (range_loc[1].Value) {
+					mark_strings.push(MarkedString.fromPlainText(range_loc[1].Value))
 				}
-			}
-			else if (range_loc[1].Value) {
-				mark_strings.push(MarkedString.fromPlainText(range_loc[1].Value))
 			}
 			return { contents: mark_strings };
 		}
