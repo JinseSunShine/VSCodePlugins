@@ -235,9 +235,14 @@ function M.clear_cache()
     end
 end
 
-local function GetFunctionNote(vast)
-    return type(vast.value) == 'function' and vast.parent and (vast.parent.tag == 'Call' or vast.parent.tag == 'Invoke')
-        and vast.parent.note
+local function GetFunctionNote(ast)
+    local vast = ast.seevalue or ast
+    if type(vast.value) == 'function' and vast.parent and vast.parent.note then
+        if (vast.parent.tag == 'Call' and vast == vast.parent[1]) or 
+            (vast.parent.tag == 'Invoke' and ast == vast.parent[2]) then
+            return vast.parent.note
+        end
+    end
 end
 
 -- Gets all keywords related to AST `ast`, where `top_ast` is the root of `ast`
@@ -1507,7 +1512,7 @@ function M.get_var_attributes(ast)
     else
         attributes[#attributes+1] = "FIX" -- shouldn't happen?
     end
-    if GetFunctionNote(vast)
+    if GetFunctionNote(ast)
     then
         attributes[#attributes+1] = 'warn'
     end
@@ -1584,7 +1589,7 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         lines[#lines+1] = kind .. ": " .. sig
     end
 
-    local func_note = GetFunctionNote(vast)
+    local func_note = GetFunctionNote(ast)
     if func_note then
         lines[#lines+1] = {Type="Warning", Value=func_note}
         if not sig then
@@ -1624,7 +1629,7 @@ function M.list_warnings(tokenlist, src)
                 warn("unknown global " .. ast[1])
             end
             local vast = ast.seevalue or ast
-            local note = GetFunctionNote(vast)
+            local note = GetFunctionNote(ast)
             if note and not isseen[vast.parent] then
                 isseen[vast.parent] = true
                 local esrc = LA.ast_to_text(vast.parent, tokenlist, src)

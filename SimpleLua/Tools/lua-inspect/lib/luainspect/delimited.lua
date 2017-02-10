@@ -70,6 +70,7 @@ function M.ast_to_delimited(ast, src, tokenlist)
     fmt_tokens[#fmt_tokens + 1] = json.encode({GlobalSignatures = global_signatures})
 
     local ID_Value_Map = {}
+    local ID_Value_Array_Index = #fmt_tokens
     for _, token in ipairs(tokenlist) do
         local fline_1, fcol_1 = LA.pos_to_linecol(token.fpos, src)
         local fline_2, fcol_2 = LA.pos_to_linecol(token.lpos, src)
@@ -87,7 +88,7 @@ function M.ast_to_delimited(ast, src, tokenlist)
     for ID, Value in pairs(ID_Value_Map) do
         table.insert(ID_Value_Array, {ID=ID, Value=Value})
     end
-    fmt_tokens[#fmt_tokens + 1] = json.encode({ID_Value_Map = ID_Value_Array})
+    table.insert(fmt_tokens, ID_Value_Array_Index, json.encode({ID_Value_Map = ID_Value_Array}))
 
     local result = table.concat(fmt_tokens, "\n")
     if result:len() > math.pow(2, 23) then

@@ -273,8 +273,9 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 	let map_loc_highlights = new Map<any, Array<DocumentHighlight>>()
 	MapFileHighlights.set(document_item.uri, map_loc_highlights)
 
+	let map_token_completions = new Map()
 	let map_id_completions = new Map()
-	MapFileCompletions.set(document_item.uri, map_id_completions)
+	MapFileCompletions.set(document_item.uri, map_token_completions)
 
 	let map_id_signatures = new Map()
 	MapFileSignatures.set(document_item.uri, map_id_signatures)
@@ -311,7 +312,7 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 						item.kind = CompletionItemKind.File
 						completions.push(item)
 					}
-					map_id_completions.set("require", completions)
+					map_token_completions.set("require", completions)
 				}
 				else if (json_data["ID_Value_Map"]) {
 					if (Array.isArray(json_data["ID_Value_Map"])) {
@@ -347,8 +348,8 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 								completions.push(item)
 							}
 
-							if (!map_id_completions.has(GlobalNameFields["Name"])) {
-								map_id_completions.set(GlobalNameFields["Name"], completions)
+							if (!map_token_completions.has(GlobalNameFields["Name"])) {
+								map_token_completions.set(GlobalNameFields["Name"], completions)
 							}
 						}
 					}
@@ -411,7 +412,33 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 					}
 
 					if (json_data["id"] != null) {
-						AddValueProperty(map_range_info, id_range, "ValueID", json_data["id"])
+						let var_id = json_data["id"]
+						if (map_id_completions.has(var_id))
+						{
+							if (!map_token_completions.has(id_name))
+							{
+								map_token_completions.set(id_name, new Array<CompletionItem>())
+							}
+
+							let exist_completions = map_token_completions.get(id_name)
+							for (let complete_item of map_id_completions.get(var_id))
+							{
+								let already_exist = false
+								for (let exist_complete_item of exist_completions)
+								{
+									if (complete_item.label == exist_complete_item.label)
+									{
+										already_exist = true
+										break
+									}
+								}
+
+								if (!already_exist)
+								{
+									exist_completions.push(complete_item)
+								}
+							}
+						}
 					}
 
 					let isfunction = false
@@ -592,19 +619,8 @@ let on_formatting = function (params, token) {
 		let orig_lines = func_trim_split(the_content)
 
 		let text_edits = new Array();
-		// if (orig_lines.length == formatted_lines.length) {
-		// 	for (let line_index = 0; line_index < orig_lines.length; line_index++) {
-		// 		if (orig_lines[line_index] != formatted_lines[line_index]) {
-		// 			let line_range = Range.create(Position.create(line_index, 0), Position.create(line_index, orig_lines[line_index].length))
-		// 			text_edits.push(TextEdit.replace(line_range, formatted_lines[line_index]));
-		// 		}
-		// 	}
-		// }
-		// else {
-
 		let line_range = Range.create(Position.create(0, 0), the_doc.positionAt(the_content.length))
 		text_edits.push(TextEdit.replace(line_range, formatted_content));
-		// }
 		return text_edits
 	}
 	else {
@@ -644,43 +660,22 @@ let func_oncompletion = function (params, token) {
 				}
 			}
 
-			let map_id_completions = MapFileCompletions.get(params.textDocument.uri)
-			if (id_position != null) {
-				let ValueID = null
-				if (MapFileInfo.has(params.textDocument.uri)) {
-					let map_range_info = MapFileInfo.get(params.textDocument.uri)
-					for (var range_loc of map_range_info) {
-						if (!IsPosInRange(id_position, range_loc[0])) {
-							continue;
-						}
-
-						if (range_loc[1].ValueID) {
-							ValueID = range_loc[1].ValueID
-							break
-						}
-					}
-				}
-				if (ValueID != null) {
-					if (map_id_completions.has(ValueID)) {
-						let completions = map_id_completions.get(ValueID)
-						if (seprator == ":") {
-							let func_completions = new Array<CompletionItem>()
-							for (let completion of completions) {
-								if (completion.kind == CompletionItemKind.Function) {
-									func_completions.push(completion)
-								}
+			if (id_name != null) {
+				let map_token_completions = MapFileCompletions.get(params.textDocument.uri)
+				if (map_token_completions.has(id_name)) {
+					let all_completions = map_token_completions.get(id_name)
+					if (seprator == ":") {
+						let func_completions = new Array<CompletionItem>()
+						for (let completion of all_completions) {
+							if (completion.kind == CompletionItemKind.Function) {
+								func_completions.push(completion)
 							}
-							return func_completions
 						}
-						return completions
+						return func_completions
 					}
+					return all_completions
 				}
-				else if (id_name != null) {
-					if (map_id_completions.has(id_name)) {
-						return map_id_completions.get(id_name)
-					}
-				}
-			}
+			}	
 		}
 	}
 }
