@@ -9,9 +9,9 @@ import {
 	InitializedEvent, TerminatedEvent, ContinuedEvent, StoppedEvent, BreakpointEvent, OutputEvent, Event,
 	Thread, StackFrame, Scope, Source, Handles, Breakpoint
 } from 'vscode-debugadapter';
-import {DebugProtocol} from 'vscode-debugprotocol';
-import {readFileSync} from 'fs';
-import {basename} from 'path';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { readFileSync } from 'fs';
+import { basename } from 'path';
 
 
 /**
@@ -21,8 +21,6 @@ export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArgum
 	/** An absolute path of the project to debug. */
 	projectDir: string;
 	clientIndex: string;
-	/** Automatically stop target after launch. If not specified, target does not stop. */
-	stopOnEntry?: boolean;
 }
 
 class MockDebugSession extends DebugSession {
@@ -38,7 +36,7 @@ class MockDebugSession extends DebugSession {
 	private __currentLine = 0;
 	private get _currentLine(): number {
 		return this.__currentLine;
-    }
+	}
 	private set _currentLine(line: number) {
 		this.__currentLine = line;
 		this.sendEvent(new OutputEvent(`line: ${line}\n`));	// print current line on debug console
@@ -164,16 +162,7 @@ class MockDebugSession extends DebugSession {
 			log_stream.write(util.format(d) + '\n');
 		};
 
-		if (args.stopOnEntry) {
-			this._currentLine = 0;
-			this.sendResponse(response);
-
-			// we stop on the first line
-			this.sendEvent(new StoppedEvent("entry", MockDebugSession.THREAD_ID));
-		} else {
-			// we just start to run until we hit a breakpoint or an exception
-			this.continueRequest(<DebugProtocol.ContinueResponse>response, { threadId: MockDebugSession.THREAD_ID });
-		}
+		this.continueRequest(<DebugProtocol.ContinueResponse>response, { threadId: MockDebugSession.THREAD_ID });
 
 		const spawn = require('child_process').spawn;
 		this.mobdebugger = spawn('lua', ['Main.lua', args.clientIndex]);
@@ -188,6 +177,7 @@ class MockDebugSession extends DebugSession {
 				this.command_list = new Array();
 				this.command_list.push("updatebreakpoints");
 				this.command_list.push("run\n");
+				this.sendEvent(new OutputEvent(`Client Connected`));
 			}
 			else if (data_str.startsWith("Program finished")) {
 				this.sendEvent(new TerminatedEvent());
@@ -361,9 +351,6 @@ class MockDebugSession extends DebugSession {
 		let cmd_str = `eval ${args.expression}\n`
 		if (this.debugger_ready) {
 			this.executeCommand(cmd_str);
-		}
-		else {
-			this.command_list.push(cmd_str);
 		}
 	}
 }

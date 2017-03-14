@@ -82,6 +82,14 @@ function CustomTypes.GetAnnotateFunc(Type)
                 if VarValue then
                     VarValue.pWidgetRef = DefaultValue
                     CommonUtils.SetStaticTable(VarValue.pWidgetRef, 3, true)
+                    local bSuccess, ResultOrError = pcall(require, string.format("CustomTypes.%s", Type))
+                    if bSuccess and ResultOrError.FieldDefs then
+                        for field_name, field_info in pairs(ResultOrError.FieldDefs) do
+                            if field_info.Type and string.match(field_info.Type, "^UUP_") then
+                                VarValue[field_name] = {}
+                            end
+                        end
+                    end
                 end
             end
             return TypeAnnotateFuncs[Type]

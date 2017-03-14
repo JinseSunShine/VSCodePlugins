@@ -23,7 +23,7 @@ let documents = new Map();
 let fs = require("fs")
 let path = require("path")
 
-let CustomType_completion_array = new Array<CompletionItem>()
+let CustomType_completion_array = null
 const UE4Lua = path.join(path.dirname(__dirname), "../../SimpleLuaLib/UE4.lua");
 const CustomTypesDir = path.join(path.dirname(__dirname), "../../SimpleLuaLib/CustomTypes");
 
@@ -33,36 +33,34 @@ function ReRunLuaInspect() {
 	}
 }
 
-if (fs.existsSync(CustomTypesDir))
-{
-	function GatherCustomTypeCompletions() {
-		CustomType_completion_array = new Array<CompletionItem>()
-
-		fs.readdir(CustomTypesDir, (err, files) => {
-			if (err) return;
-			for (let Item of files) {
-				let abs_path = path.join(CustomTypesDir, Item);
-				let fs_state = fs.statSync(abs_path);
-				if (fs_state.isFile() && Item.endsWith(".lua")) {
-					let type_name = Item.substring(0, Item.length - 4)
-					let item = CompletionItem.create(type_name)
-					item.kind = CompletionItemKind.Class
-					CustomType_completion_array.push(item)
-				}
+function ConstructCustomTypeCompletions() {
+	CustomType_completion_array = new Array<CompletionItem>()
+	let item = CompletionItem.create("Config_C")
+	item.kind = CompletionItemKind.Class
+	CustomType_completion_array.push(item)
+	if (fs.existsSync(CustomTypesDir)) {
+		let files = fs.readdirSync(CustomTypesDir)
+		for (let filename of files) {
+			if (filename && filename.endsWith(".lua")) {
+				let type_name = filename.substring(0, filename.length - 4)
+				item = CompletionItem.create(type_name)
+				item.kind = CompletionItemKind.Class
+				CustomType_completion_array.push(item)
 			}
-		})
+		}
 	}
-	GatherCustomTypeCompletions()
+}
+
+if (fs.existsSync(CustomTypesDir)) {
 	fs.watch(CustomTypesDir, (event, filename) => {
 		if (event == 'rename') {
-			GatherCustomTypeCompletions()
+			CustomType_completion_array = null
 		}
 		ReRunLuaInspect()
 	})
 }
 
-if (fs.existsSync(UE4Lua))
-{
+if (fs.existsSync(UE4Lua)) {
 	fs.watch(UE4Lua, (event, filename) => {
 		ReRunLuaInspect()
 	})
@@ -115,19 +113,39 @@ interface LuaInspectSettings {
 let ShowAllValues: boolean;
 
 connection.onDidChangeConfiguration((change) => {
-    let settings = <Settings>change.settings;
-    ShowAllValues = settings.LuaInspect.ShowAllValues;
+	let settings = <Settings>change.settings;
+	ShowAllValues = settings.LuaInspect.ShowAllValues;
 });
 
+let GlobalSignatures = new Map();
+
+let FileQueue = new Array();
 let MapFileInfo = new Map();
 let MapFileFunc = new Map();
 let MapFileReferences = new Map<string, Map<any, Array<Location>>>();
 let MapFileHighlights = new Map<string, Map<any, Array<DocumentHighlight>>>();
-
 let MapFileCompletions = new Map();
 let MapFileSignatures = new Map();
-let GlobalSignatures = new Map();
 let MapFileToID_Value_Map = new Map();
+
+function CheckFileQueue(new_file_uri)
+{
+	if (FileQueue.indexOf(new_file_uri) < 0)
+	{
+		if (FileQueue.length >= 20)
+		{
+			let FileUri = FileQueue.shift()
+			MapFileInfo.delete(FileUri)
+			MapFileFunc.delete(FileUri)
+			MapFileReferences.delete(FileUri)
+			MapFileHighlights.delete(FileUri)
+			MapFileCompletions.delete(FileUri)
+			MapFileSignatures.delete(FileUri)
+			MapFileToID_Value_Map.delete(FileUri)
+		}
+		FileQueue.push(new_file_uri)
+	}
+}
 
 function IsPosInRange(pos, range) {
 	let line = pos.line
@@ -191,76 +209,102 @@ const child_process = require('child_process');
 let File_LuaInspect_Map = new Map()
 let CachedTaskToRun_Map = new Map()
 
-let run_lua_inspect = function (document_item) {
-	if (!File_LuaInspect_Map.has(document_item.uri) && !CachedTaskToRun_Map.has(document_item.uri)) {
-		if (File_LuaInspect_Map.size >= 6) {
-			CachedTaskToRun_Map.set(document_item.uri, document_item)
-			return
-		}
-		let the_doc = TextDocument.create(document_item.uri, document_item.languageId, document_item.version, document_item.text)
-		var file_path = Files.uriToFilePath(the_doc.uri)
-		const working_dir = path.join(path.dirname(__dirname), "../Tools");
-		process.chdir(working_dir);
+function StartLuaInspectProcess(document_item, file_path) {
+	const working_dir = path.join(path.dirname(__dirname), "../Tools");
+	process.chdir(working_dir);
 
-		connection.console.log(`run luainspect on file: ${file_path}\n`)
-		const lua_inspect_ps = child_process.spawn('lua', ['lua-inspect/luainspect', file_path]);
-		lua_inspect_ps.stdout.on('data', (data) => {
-			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+	connection.console.log(`run luainspect on file: ${file_path}\n`)
+	const lua_inspect_ps = child_process.spawn('lua', ['lua-inspect/luainspect', file_path]);
+	lua_inspect_ps.stdout.on('data', (data) => {
+		let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+		if (PS_Out_Err) {
 			if (PS_Out_Err.Out == null) {
 				PS_Out_Err.Out = ""
 			}
 			PS_Out_Err.Out += data.toString()
-		});
+		}
+	});
 
-		lua_inspect_ps.stderr.on('data', (data) => {
-			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+	lua_inspect_ps.stderr.on('data', (data) => {
+		let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+		if (PS_Out_Err) {
 			if (PS_Out_Err.Err == null) {
 				PS_Out_Err.Err = ""
 			}
 			PS_Out_Err.Err += data.toString()
-		});
+		}
+	});
 
-		lua_inspect_ps.on('close', (code) => {
-			let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
-			if (code == 0) {
-				Parse_Inspect_Result(document_item, PS_Out_Err.Out)
-			}
-			else {
-				let error_msg = PS_Out_Err.Err
-				connection.console.log(`stderr: ${error_msg}\n`);
-				let error_json = JSON.parse(error_msg)
-				if (error_json["ErrorType"] == "syntax") {
-					let error_pos = Position.create(error_json["line"] - 1, error_json["colnum"] - 1)
-					let id_range = Range.create(error_pos, error_pos)
+	lua_inspect_ps.on('close', (code) => {
+		let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+		if (PS_Out_Err.PS == null)
+		{
+			File_LuaInspect_Map.set(document_item.uri, StartLuaInspectProcess(document_item, file_path))
+			return
+		}
+		
+		if (code == 0) {
+			Parse_Inspect_Result(document_item, PS_Out_Err.Out)
+		}
+		else if (PS_Out_Err.Err) {
+			let error_msg = PS_Out_Err.Err
+			connection.console.log(`stderr: ${error_msg}\n`);
+			let error_json = JSON.parse(error_msg)
+			if (error_json["ErrorType"] == "syntax") {
+				let error_pos = Position.create(error_json["line"] - 1, error_json["colnum"] - 1)
+				let id_range = Range.create(error_pos, error_pos)
 
-					let diagnostics_array = new Array<Diagnostic>()
-					diagnostics_array.push(Diagnostic.create(id_range, error_json["msg"], DiagnosticSeverity.Error))
-					let diagnostics_param = {
-						uri: document_item.uri,
-						diagnostics: diagnostics_array
-					}
-					connection.sendDiagnostics(diagnostics_param)
+				let diagnostics_array = new Array<Diagnostic>()
+				diagnostics_array.push(Diagnostic.create(id_range, error_json["msg"], DiagnosticSeverity.Error))
+				let diagnostics_param = {
+					uri: document_item.uri,
+					diagnostics: diagnostics_array
 				}
+				connection.sendDiagnostics(diagnostics_param)
 			}
-			File_LuaInspect_Map.delete(document_item.uri)
+		}
+		File_LuaInspect_Map.delete(document_item.uri)
 
-			if (CachedTaskToRun_Map.size > 0) {
-				let KeyToDelete, doc_item
-				for (let [k, v] of CachedTaskToRun_Map) {
-					KeyToDelete = k
-					doc_item = v
-					break
-				}
-				CachedTaskToRun_Map.delete(KeyToDelete)
-				run_lua_inspect(doc_item)
+		if (CachedTaskToRun_Map.size > 0) {
+			let KeyToDelete, doc_item
+			for (let [k, v] of CachedTaskToRun_Map) {
+				KeyToDelete = k
+				doc_item = v
+				break
 			}
-		})
+			CachedTaskToRun_Map.delete(KeyToDelete)
+			run_lua_inspect(doc_item)
+		}
+	})
 
-		File_LuaInspect_Map.set(document_item.uri, { PS: lua_inspect_ps })
+	return { PS: lua_inspect_ps }
+}
+let run_lua_inspect = function (document_item) {
+	if (File_LuaInspect_Map.has(document_item.uri)) {
+		let PS_Out_Err = File_LuaInspect_Map.get(document_item.uri)
+		if (PS_Out_Err && PS_Out_Err.PS) {
+			PS_Out_Err.PS.kill()
+			File_LuaInspect_Map.set(document_item.uri, {})
+		}
+		return
+	}
+
+	if (!CachedTaskToRun_Map.has(document_item.uri)) {
+		if (File_LuaInspect_Map.size >= 6) {
+			CachedTaskToRun_Map.set(document_item.uri, document_item)
+			return
+		}
+		var file_path = Files.uriToFilePath(document_item.uri)
+		if (file_path == null) {
+			return
+		}
+
+		File_LuaInspect_Map.set(document_item.uri, StartLuaInspectProcess(document_item, file_path))
 	}
 }
 
 let Parse_Inspect_Result = function (document_item, inspect_result) {
+	CheckFileQueue(document_item.uri)
 	var map_range_info = new Map();
 	MapFileInfo.set(document_item.uri, map_range_info);
 
@@ -377,7 +421,7 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 						let file_path = json_data["RequirePath"]
 						if (file_path == false) {
 							diagnostics_array.push(Diagnostic.create(id_range, "File didn't exist", DiagnosticSeverity.Error))
-						} else {
+						} else if (file_path != "C++") {
 							let def_loc = Location.create(Uri.file(file_path).toString(), Range.create(def_pos, def_pos))
 							AddValueProperty(map_range_info, id_range, "Definition", def_loc)
 						}
@@ -413,28 +457,22 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 
 					if (json_data["id"] != null) {
 						let var_id = json_data["id"]
-						if (map_id_completions.has(var_id))
-						{
-							if (!map_token_completions.has(id_name))
-							{
+						if (map_id_completions.has(var_id)) {
+							if (!map_token_completions.has(id_name)) {
 								map_token_completions.set(id_name, new Array<CompletionItem>())
 							}
 
 							let exist_completions = map_token_completions.get(id_name)
-							for (let complete_item of map_id_completions.get(var_id))
-							{
+							for (let complete_item of map_id_completions.get(var_id)) {
 								let already_exist = false
-								for (let exist_complete_item of exist_completions)
-								{
-									if (complete_item.label == exist_complete_item.label)
-									{
+								for (let exist_complete_item of exist_completions) {
+									if (complete_item.label == exist_complete_item.label) {
 										already_exist = true
 										break
 									}
 								}
 
-								if (!already_exist)
-								{
+								if (!already_exist) {
 									exist_completions.push(complete_item)
 								}
 							}
@@ -521,7 +559,7 @@ connection.onDidSaveTextDocument((params) => {
 	}
 })
 connection.onDidCloseTextDocument((params) => {
-    if (documents.has(params.textDocument.uri)) {
+	if (documents.has(params.textDocument.uri)) {
 		documents.delete(params.textDocument.uri)
 	}
 })
@@ -567,14 +605,17 @@ let on_hover = function (params, token) {
 					file_path = path.relative(workspaceRoot, file_path)
 					mark_strings.push(MarkedString.fromPlainText(`Defined at ${file_path}`))
 				}
-
-				if (range_loc[1].Signature) {
-					for (let sig of range_loc[1].Signature) {
-						mark_strings.push(MarkedString.fromPlainText(sig.label))
-					}
+			}
+			if (range_loc[1].Value ) {
+				let Value = range_loc[1].Value
+				if (!Value.startsWith("table") && !Value.startsWith("function"))
+				{
+					mark_strings.push(MarkedString.fromPlainText(Value))
 				}
-				else if (range_loc[1].Value) {
-					mark_strings.push(MarkedString.fromPlainText(range_loc[1].Value))
+			}
+			if (range_loc[1].Signature) {
+				for (let sig of range_loc[1].Signature) {
+					mark_strings.push(MarkedString.fromPlainText(sig.label))
 				}
 			}
 			return { contents: mark_strings };
@@ -655,6 +696,9 @@ let func_oncompletion = function (params, token) {
 				else {
 					matches = the_substr.match(/AnnotateType[ ]*\(["'](\w*)$/)
 					if (matches != null) {
+						if (CustomType_completion_array == null) {
+							ConstructCustomTypeCompletions()
+						}
 						return CustomType_completion_array
 					}
 				}
@@ -675,7 +719,7 @@ let func_oncompletion = function (params, token) {
 					}
 					return all_completions
 				}
-			}	
+			}
 		}
 	}
 }

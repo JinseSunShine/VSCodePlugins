@@ -1,9 +1,13 @@
 SwordGame_Home = os.getenv("SWORDGAME_HOME")
 if SwordGame_Home then
     local lfs = require"lfs"
-    lfs.rmdir("htmls")
-    lfs.mkdir("htmls")
-    lfs.chdir("htmls")
+    local htmls_dir = lfs.currentdir() .. '/' .. "htmls"
+    local attr = lfs.attributes (htmls_dir)
+    if attr and attr.mode == "directory" then
+        lfs.rmdir(htmls_dir)
+    end
+    lfs.mkdir(htmls_dir)
+    lfs.chdir(htmls_dir)
     local Map_lua_html = {}
     function GenerateDir (current_dir)
         for item in lfs.dir(current_dir) do

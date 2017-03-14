@@ -18,21 +18,12 @@
         "commands": [{
             "command": "extension.OpenWithVim",
             "title": "OpenWithVim"
-        },
-        {
-            "command": "extension.OpenAllLuaScripts",
-            "title": "OpenAllLuaScripts"
         }],
         "menus": {
 			"editor/context": [
 				{
 					"when": "editorTextFocus",
 					"command": "extension.OpenWithVim",
-					"group": "Goto"
-				},
-                {
-					"when": "editorTextFocus",
-					"command": "extension.OpenAllLuaScripts",
 					"group": "Goto"
 				}
 			]

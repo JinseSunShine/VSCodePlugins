@@ -1,7 +1,7 @@
 {
 	"name": "simple-lua",
 	"displayName": "SimpleLua",
-	"version": "0.0.8",
+	"version": "0.1.1",
 	"publisher": "hehe",
 	"description": "Don't install, this plugin is used by ourselves only.",
 	"author": {
@@ -47,6 +47,21 @@
 		"onLanguage:lua"
 	],
 	"contributes": {
+		"commands": [
+			{
+				"command": "extension.OpenAllLuaScripts",
+				"title": "OpenAllLuaScripts"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"when": "editorTextFocus",
+					"command": "extension.OpenAllLuaScripts",
+					"group": "Goto"
+				}
+			]
+		},
 		"snippets": [
 			{
 				"language": "lua",
@@ -84,11 +99,6 @@
 								"type": "string",
 								"description": "Client Index passed to mobdebug",
 								"default": "1"
-							},
-							"stopOnEntry": {
-								"type": "boolean",
-								"description": "Automatically stop after launch.",
-								"default": true
 							}
 						}
 					}
@@ -99,24 +109,21 @@
 						"type": "lua",
 						"request": "launch",
 						"projectDir": "${workspaceRoot}",
-						"clientIndex": "1",
-						"stopOnEntry": true
+						"clientIndex": "1"
 					},
 					{
 						"name": "SimpleLua 2",
 						"type": "lua",
 						"request": "launch",
 						"projectDir": "${workspaceRoot}",
-						"clientIndex": "2",
-						"stopOnEntry": true
+						"clientIndex": "2"
 					},
 					{
 						"name": "SimpleLua 3",
 						"type": "lua",
 						"request": "launch",
 						"projectDir": "${workspaceRoot}",
-						"clientIndex": "3",
-						"stopOnEntry": true
+						"clientIndex": "3"
 					}
 				]
 			}

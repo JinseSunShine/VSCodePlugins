@@ -11,12 +11,12 @@ function M.AddSignature(func, func_params, IsStatic)
     local types = {}
     for _, param_prop in pairs(func_params) do
         table.insert(params, param_prop.Name)
-        table.insert(types, param_prop.Type)
+        table.insert(types, param_prop.Type or "")
         param_max = param_max + 1
         if param_prop.Name == '...' then
             param_max = math.huge
             break
-        elseif not param_prop.IsRef and not param_prop.HaveDefault then
+        elseif not param_prop.IsOut and not param_prop.HaveDefault then
             param_min = param_max
         end
     end
@@ -59,7 +59,7 @@ M.global_signatures = {
     type = {Params = { "v" }},
     unpack = {Params = { "list", "i", "j" }},
     _VERSION = "(string)",
-    xpcall = {Params = { "f", "err" }},
+    xpcall = {Params = { "f", "err" , "..."}},
     module = {Params = { "name", "..." }},
     require = {Params = { "modname" }},
     coroutine = "(table) coroutine manipulation library",
@@ -221,7 +221,7 @@ M.argument_counts = {
     [_G.AnnotateType] = {2, 2},
     [type] = {1},
     [unpack] = {1,3},
-    [xpcall] = {2,2},
+    [xpcall] = {2,math.huge},
     [module] = {1,math.huge},
     [require] = {1,1},
     [coroutine.create] = {1,1},

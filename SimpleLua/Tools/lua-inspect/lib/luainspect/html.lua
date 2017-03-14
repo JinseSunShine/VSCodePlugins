@@ -35,7 +35,7 @@ function M.ast_to_html(ast, src, tokenlist, options)
         local snip_html = escape_html(snip_src)
         if token then
             local ast = token.ast
-            if token.tag == 'Id' or ast.isfield then
+            if token.tag == 'Id' or ast.isfield or (ast.tag == 'String' and ast.id) then
                 local class = 'id '
                 class = class .. table.concat(LI.get_var_attributes(ast), " ")
                 if ast.id then class = class.." id"..ast.id end

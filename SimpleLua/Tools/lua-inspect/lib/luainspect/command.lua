@@ -74,6 +74,9 @@ if SwordGame_Home then
             SwordGame_Prefabs[prefab_tab.nID] = prefab_tab
         end
     end
+
+    SwordGame_LuaPath["profiler"] = "C++"
+    SwordGame_LuaPath["mime.core"] = "C++"
 end
 
 local LA = require "luainspect.ast"
@@ -124,6 +127,8 @@ if ast then
 
     LI.inspect(ast, tokenlist, src, report, 1)
     LI.inspect(ast, tokenlist, src, report, 2)
+    LI.inspect(ast, tokenlist, src, report, 3)
+    LI.inspect(ast, tokenlist, src, report, 4)
     LI.mark_related_keywords(ast, tokenlist, src)
 
     local output = ast_to_text(ast, src, tokenlist, {libpath=libpath})

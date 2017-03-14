@@ -99,4 +99,18 @@ return {
             {Name="Var",Type="",IsRef=false,HaveDefault=false},
         },
     },
+    GetUPWidgetNames = {
+        Value = function() end,
+        Params = {
+            {Name="pWidget",Type="",IsRef=false,HaveDefault=false},
+        },
+    },
+    IsEqualVar = {
+        Value = function() end,
+        Params = {
+            {Name="Var1",Type="",IsRef=false,HaveDefault=false},
+            {Name="Var2",Type="",IsRef=false,HaveDefault=false},
+            {Name="Depth",Type="number",IsRef=false,HaveDefault=false},
+        },
+    },
 }

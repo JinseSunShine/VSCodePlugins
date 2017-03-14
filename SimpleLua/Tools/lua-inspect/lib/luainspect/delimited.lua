@@ -21,7 +21,7 @@ end
 local function describe(token, tokenlist, src, ID_Value_Map)
     if token then
         local ast = token.ast
-        if token.tag == 'Id' or ast.isfield then
+        if token.tag == 'Id' or ast.isfield or (ast.tag == 'String' and ast.id) then
             local line = {}
             if ast.id then line.id = ast.id end
             line.Attributes = LI.get_var_attributes(ast)

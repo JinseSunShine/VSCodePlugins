@@ -20,7 +20,7 @@ export function activate(context: ExtensionContext) {
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	let serverOptions: ServerOptions = {
-		run : { module: serverModule, transport: TransportKind.ipc },
+		run: { module: serverModule, transport: TransportKind.ipc },
 		debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
 	}
 
@@ -41,4 +41,17 @@ export function activate(context: ExtensionContext) {
 	// Push the disposable to the context's subscriptions so that the
 	// client can be deactivated on extension deactivation
 	context.subscriptions.push(disposable);
+
+	let disposable_OpenAllLuaScripts = vscode.commands.registerCommand('extension.OpenAllLuaScripts', (param) => {
+		let allfiles = vscode.workspace.findFiles("**/*.lua", "")
+		allfiles.then(
+			(result: vscode.Uri[]) => {
+				result.forEach(function (value, index, array) {
+					vscode.workspace.openTextDocument(value);
+				})
+			}
+		)
+	});
+
+	context.subscriptions.push(disposable_OpenAllLuaScripts);
 }

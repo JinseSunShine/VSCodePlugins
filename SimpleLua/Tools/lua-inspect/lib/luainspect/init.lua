@@ -17,8 +17,10 @@ local LG = require "luainspect.globals"
 local LS = require "luainspect.signatures"
 local T = require "luainspect.types"
 local COMPAT = require "luainspect.compat_env"
-
 --! require 'luainspect.typecheck' (context)
+
+-- chenliang
+local JX2Tables = require "JX2Tables"
 
 local ENABLE_RETURN_ANALYSIS = true
 local DETECT_DEADCODE = false -- may require more validation (false positives)
@@ -238,7 +240,7 @@ end
 local function GetFunctionNote(ast)
     local vast = ast.seevalue or ast
     if type(vast.value) == 'function' and vast.parent and vast.parent.note then
-        if (vast.parent.tag == 'Call' and vast == vast.parent[1]) or 
+        if (vast.parent.tag == 'Call' and vast == vast.parent[1]) or
             (vast.parent.tag == 'Invoke' and ast == vast.parent[2]) then
             return vast.parent.note
         end
@@ -405,7 +407,7 @@ end
 -- Sets known value on ast to v if ast not pegged.
 -- CATEGORY: utility function for infer_values.
 local function set_value(ast, v)
-    if not ast.isvaluepegged and ast.value == nil  then
+    if not ast.isvaluepegged then
         ast.value = v
     end
 end
@@ -663,7 +665,7 @@ function M.GetGlobalsFromUE4()
     if UE4Globals then
         return UE4Globals
     end
-    
+
     UE4Globals = {}
 
     local UE4MannualGlobals = require "UE4MannualGlobals"
@@ -683,15 +685,13 @@ function M.GetGlobalsFromUE4()
             UE4Globals[k] = struct.FieldDefs
         end
         for class, class_def in pairs(UE4.ClassDefs) do
-            local static_funcs = {}
+            local member_funcs = {}
             for func_name, func_prop in pairs(class_def.FuncDefs) do
-                if func_prop.IsStatic then
-                    local func = function () end
-                    LS.AddSignature(func, func_prop.Params, func_prop.IsStatic)
-                    static_funcs[func_name] = func
-                end
+                local func = function () end
+                LS.AddSignature(func, func_prop.Params, func_prop.IsStatic)
+                member_funcs[func_name] = func
             end
-            UE4Globals[class] = static_funcs
+            UE4Globals[class] = member_funcs
         end
     end
 
@@ -724,6 +724,7 @@ local function IsBasicTable(tb, nDeep)
     end
     return not bEmpty
 end
+
 -- Infers values of variables. Also marks dead code (ast.isdead).
 --FIX/WARNING - this probably needs more work
 -- Sets top_ast.valueglobals, ast.value, ast.valueself
@@ -731,21 +732,11 @@ end
 function M.infer_values(top_ast, tokenlist, src, report, nPass)
     if not top_ast.valueglobals then top_ast.valueglobals = M.GetGlobalsFromUE4() end
 
-    local IsTopLevelRequire = function(require_ast)
-        for _, ast in ipairs(top_ast) do
-            if ast.tag == 'Local' then
-                for _, value_ast in ipairs(ast[2]) do
-                    if value_ast == require_ast then
-                        return true
-                    end
-                end
-            end
-        end
-        return false
-    end
-
     -- infer values
-    LA.walk(top_ast,function(ast) -- walk down
+    LA.walk(top_ast,function(ast, func_depth) -- walk down
+        if func_depth ~= (nPass - 1) then
+            return
+        end
         if ast.tag == 'Function' then
             local paramlist_ast = ast[1]
             for i=1,#paramlist_ast do local param_ast = paramlist_ast[i]
@@ -762,9 +753,33 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                     end
                 end
             end
+        elseif ast.tag == 'Local' then
+            local vars_ast, values_ast = ast[1], ast[2]
+            if vars_ast and values_ast then
+                local Var1AST, Value1AST = vars_ast[1], values_ast[1]
+                if Var1AST and Var1AST.tag == 'Id' and Value1AST and Value1AST.tag == 'Table' then
+                    local source = ast.lineinfo.first[4]
+                    if source then
+                        if string.match(source, "EventList.lua$") then
+                            Value1AST.JX2TableFunc = JX2Tables.EventList
+                        elseif string.match(source, "Wnd.lua$") then
+                            Value1AST.JX2TableFunc = JX2Tables.CheckZOrder
+                        elseif string.match(source, "ZOrder.lua$") or string.match(source, "UILevelPath.lua$") then
+                            Value1AST.JX2TableFunc = JX2Tables.CheckWnd
+                        elseif string.match(source, "LocText[/\\]+LocTextETeamTarget.lua$") then
+                            Value1AST.JX2TableFunc = function(ast) JX2Tables.LocText(ast, true) end
+                        elseif string.match(source, "LocText[/\\]+LocText[%w_]+.lua$") then
+                            Value1AST.JX2TableFunc = JX2Tables.LocText
+                        end
+                    end
+                end
+            end
         end
     end,
-    function(ast) -- walk up
+    function(ast, func_depth) -- walk up
+        if func_depth ~= (nPass - 1) then
+            return
+        end
         -- process `require` statements.
         if ast.tag == 'Local' or ast.tag == 'Localrec' then
             local vars_ast, values_ast = ast[1], ast[2]
@@ -774,6 +789,9 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local value
                 if value_ast then
                     value = value_ast.value
+                    if value_ast.JX2Error then
+                        var_ast.JX2Error = value_ast.JX2Error
+                    end
                 elseif valuelist then
                     local vlidx = i - #values_ast + 1
                     value = valuelist.sizeunknown and vlidx > valuelist.n and T.universal or valuelist[vlidx]
@@ -875,22 +893,6 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local ok; ok, ast.valueself = pzcall(tindex, {ast[1], ast[2]}, t, k)
                 if not ok then ast.valueself = T.error(ast.valueself) end
             end
-        elseif ast[1][1] == 'AnnotateType' then
-            local VarType = ast[2] and ast[2].value
-            local VarDef = ast[3]
-            local CustomTypes = require "luainspect.CustomTypes"
-            if not VarDef or not VarType then
-                ast.note = "Need 2 Params"
-            elseif type(VarType) ~= "string" then
-                ast.note = "Param 1 should be string"
-            else
-                local AnnotateFunc = CustomTypes.GetAnnotateFunc(VarType)
-                if AnnotateFunc then
-                    AnnotateFunc(VarDef)
-                else
-                    ast.note = "Invalid type"
-                end
-            end
         end
         local func; if isinvoke then func = ast.valueself else func = ast[1].value end
 
@@ -911,33 +913,54 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
             if isinvoke then argvalues[1] = ast.valueself end -- `self`
         end
         local found
-        if known(func) and argvalues_concrete then -- attempt call with concrete args
+        if ast[1][1] == 'luaclass' then
+            local NewValue = {}
+            if known(argvalues[2]) and type(argvalues[2]) == 'table' then
+                NewValue = copytable(argvalues[2])
+            end
+            ast.valuelist = {n=1,NewValue}
+            ast.value = ast.valuelist[1]
+            found = true
+        elseif ast[1][1] == 'AnnotateType' then
+            local VarType = ast[2] and ast[2].value
+            local VarDef = ast[3]
+            local CustomTypes = require "luainspect.CustomTypes"
+            if not VarDef or not VarType then
+                ast.note = "Need 2 Params"
+            elseif type(VarType) ~= "string" then
+                ast.note = "Param 1 should be string"
+            else
+                local AnnotateFunc = CustomTypes.GetAnnotateFunc(VarType)
+                if AnnotateFunc then
+                    AnnotateFunc(VarDef)
+                else
+                    ast.note = "Invalid type"
+                end
+            end
+        elseif known(func) and argvalues_concrete then -- attempt call with concrete args
             -- Get list of values of arguments.
             -- Any call to require is handled specially (source analysis).
             if func == require and type(argvalues[1]) == 'string' then
-                local is_top_require = IsTopLevelRequire(ast)
-                if (is_top_require and nPass == 1) or (not is_top_require and nPass == 2) then
-                    local spath = ast.lineinfo.first[4] -- a HACK? relies on AST lineinfo
-                    local val = M.require_inspect(argvalues[1], report, spath:gsub('[^\\/]+$', ''))
+                local spath = ast.lineinfo.first[4] -- a HACK? relies on AST lineinfo
+                local val = M.require_inspect(argvalues[1], report, spath:gsub('[^\\/]+$', ''))
 
-                    if SwordGame_Home and argvalues[1] == "UI" then
-                        for wnd_id, wnd_tab in pairs(SwordGame_Wnds) do
-                            if wnd_tab.szWndName then
-                                val[wnd_tab.szWndName:sub(4)] = wnd_tab.nID
-                            end
-                        end
-                        for prefab_id, prefab_tab in pairs(SwordGame_Prefabs) do
-                            if prefab_tab.szPrefabName then
-                                val[prefab_tab.szPrefabName:sub(2)] = prefab_tab.nID
-                            end
+                if SwordGame_Home and argvalues[1] == "UI" then
+                    for wnd_id, wnd_tab in pairs(SwordGame_Wnds) do
+                        if wnd_tab.szWndName then
+                            val[wnd_tab.szWndName:sub(4)] = wnd_tab.nID
                         end
                     end
-
-                    if known(val) and val ~= nil then
-                        ast.valuelist = {val, n=1}
-                        ast.value = ast.valuelist[1]
-                    end -- note: on nil value, assumes analysis failed (not found). This is a heuristic only.
+                    for prefab_id, prefab_tab in pairs(SwordGame_Prefabs) do
+                        if prefab_tab.szPrefabName then
+                            val[prefab_tab.szPrefabName:sub(2)] = prefab_tab.nID
+                        end
+                    end
                 end
+
+                if known(val) and val ~= nil then
+                    ast.valuelist = {val, n=1}
+                    ast.value = ast.valuelist[1]
+                end -- note: on nil value, assumes analysis failed (not found). This is a heuristic only.
                 found = known(ast.value) and ast.value ~= nil
             end
             -- Attempt call if safe.
@@ -968,9 +991,7 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local retvals = info and info.retvals
                 if retvals then
                     ast.valuelist = copytable(retvals);
-                    if ast[1] and ast[1][1] == 'luaclass' and argvalues[2] and known(argvalues[2]) and type(argvalues[2]) == 'table' then
-                        ast.valuelist = {n=1,copytable(argvalues[2])};
-                    elseif isUIManagerGetWnd and nPass == 2 and known(argvalues[2]) and type(argvalues[2]) == 'number' and SwordGame_Wnds[argvalues[2]] then
+                    if isUIManagerGetWnd and known(argvalues[2]) and type(argvalues[2]) == 'number' and SwordGame_Wnds[argvalues[2]] then
                         local szScript = SwordGame_Wnds[argvalues[2]].szScriptName
                         if SwordGame_LuaPath[szScript] then
                             local val = M.require_inspect(szScript, report, SwordGame_LuaPath[szScript]:gsub('[^\\/]+$', ''))
@@ -1031,27 +1052,33 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
     end
     elseif ast.tag == 'Table' then
         if ast.value == nil then -- avoid redefinition
-            local value = {}
-            local n = 1
-            for _,east in pairs(ast) do
-                if east.tag == 'Pair' then
-                    local kast, vast = east[1], east[2]
-                    if known(kast.value) and known(vast.value) then
-                        if kast.value == nil then
-                        -- IMPROVE? warn in some way?
-                        else
-                            value[kast.value] = vast.value
+            local JX2TableFunc = ast.JX2TableFunc
+            if JX2TableFunc then
+                JX2TableFunc(ast)
+                ast.JX2TableFunc = nil
+            else
+                local value = {}
+                local n = 1
+                for _,east in pairs(ast) do
+                    if east.tag == 'Pair' then
+                        local kast, vast = east[1], east[2]
+                        if known(kast.value) and known(vast.value) then
+                            if kast.value == nil then
+                            -- IMPROVE? warn in some way?
+                            else
+                                value[kast.value] = vast.value
+                            end
                         end
+                    else
+                        if known(east.value) then
+                            value[n] = east.value
+                        end
+                        n = n + 1
                     end
-                else
-                    if known(east.value) then
-                        value[n] = east.value
-                    end
-                    n = n + 1
                 end
+                --table.foreach(value, print)
+                ast.value = value
             end
-            --table.foreach(value, print)
-            ast.value = value
         end
     elseif ast.tag == 'Paren' then
         ast.value = ast[1].value
@@ -1100,7 +1127,7 @@ function M.mark_identifiers(ast)
     local id = 0
     local seen_globals = {}
     LA.walk(ast, function(ast)
-        if ast.tag == 'Id' or ast.isfield then
+        if ast.tag == 'Id' or ast.tag == 'Pair' or ast.isfield then
             if ast.localdefinition then
                 if ast.localdefinition == ast then -- lexical definition
                     id = id + 1
@@ -1126,6 +1153,11 @@ function M.mark_identifiers(ast)
                 if previousresolvedname then
                     ast.resolvedname = previousresolvedname .. '.' .. ast[1]:gsub('%%', '%%'):gsub('%.', '%d')
                 end
+            elseif ast.tag == 'Pair' and ast[1] and ast[1].tag == 'String' then
+                id = id + 1
+                ast[1].id = id
+                local name = ast[1][1]
+                ast[1].resolvedname = name
             else -- global
                 local name = ast[1]
                 if not seen_globals[name] then
@@ -1232,6 +1264,8 @@ function M.uninspect(top_ast)
         ast.previous = nil
         ast.localmasked = nil
         ast.localmasking = nil
+        
+        ast.JX2Error = nil
 
         -- undo mark_identifiers
         ast.id = nil
@@ -1556,6 +1590,10 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         lines[#lines+1] = {Type="Hint", Value=value_str}
     end
 
+    if ast.JX2Error then
+        lines[#lines+1] = {Type="Error", Value=ast.JX2Error}
+    end
+
     local fpos, fline, path = M.ast_to_definition_position(ast, tokenlist)
     if path then
         local file_content, err_ = readfile(path)
@@ -1569,7 +1607,6 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         if fpos then
             fline, fcol = LA.pos_to_linecol(fpos, src)
         end
-        local location = path .. "," .. (fline) .. (fcol and "," .. fcol or "")
         lines[#lines+1] = {LocationDefined = {Path=path,Line=fline, Col=fcol}}
     end
 

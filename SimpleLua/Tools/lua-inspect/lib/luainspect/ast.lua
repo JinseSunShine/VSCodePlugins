@@ -307,15 +307,22 @@ end
 -- Walks AST `ast` in arbitrary order, visiting each node `n`, executing `fdown(n)` (if specified)
 -- when doing down and `fup(n)` (if specified) when going if.
 -- CATEGORY: AST walk
-function M.walk(ast, fdown, fup)
+function M.walk(ast, fdown, fup, function_depth)
   assert(type(ast) == 'table')
-  if fdown then fdown(ast) end
+  function_depth = function_depth or 0
+  if fdown then fdown(ast, function_depth) end
+
+  local next_function_depth = function_depth
+  if ast.tag == 'Function' then
+    next_function_depth = next_function_depth + 1
+  end
+
   for _,bast in ipairs(ast) do
     if type(bast) == 'table' then
-      M.walk(bast, fdown, fup)
+      M.walk(bast, fdown, fup, next_function_depth)
     end
   end
-  if fup then fup(ast) end
+  if fup then fup(ast, function_depth) end
 end
 
 
