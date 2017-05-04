@@ -24,8 +24,14 @@ let fs = require("fs")
 let path = require("path")
 
 let CustomType_completion_array = null
-const UE4Lua = path.join(path.dirname(__dirname), "../../SimpleLuaLib/UE4.lua");
-const CustomTypesDir = path.join(path.dirname(__dirname), "../../SimpleLuaLib/CustomTypes");
+
+let UE4Lua = null
+let CustomTypesDir = null
+if (process.env.SwordGame_HOME)
+{
+	UE4Lua = path.join(process.env.SwordGame_HOME, "Source/CMakeModules/bin/SimpleLuaLib/UE4.lua");
+	CustomTypesDir = path.join(process.env.SwordGame_HOME, "Source/CMakeModules/bin/SimpleLuaLib/CustomTypes");
+}
 
 function ReRunLuaInspect() {
 	for (let [k, doc_item] of documents) {
@@ -38,7 +44,7 @@ function ConstructCustomTypeCompletions() {
 	let item = CompletionItem.create("Config_C")
 	item.kind = CompletionItemKind.Class
 	CustomType_completion_array.push(item)
-	if (fs.existsSync(CustomTypesDir)) {
+	if (CustomTypesDir != null && fs.existsSync(CustomTypesDir)) {
 		let files = fs.readdirSync(CustomTypesDir)
 		for (let filename of files) {
 			if (filename && filename.endsWith(".lua")) {
@@ -51,7 +57,7 @@ function ConstructCustomTypeCompletions() {
 	}
 }
 
-if (fs.existsSync(CustomTypesDir)) {
+if (CustomTypesDir != null && fs.existsSync(CustomTypesDir)) {
 	fs.watch(CustomTypesDir, (event, filename) => {
 		if (event == 'rename') {
 			CustomType_completion_array = null
@@ -60,7 +66,7 @@ if (fs.existsSync(CustomTypesDir)) {
 	})
 }
 
-if (fs.existsSync(UE4Lua)) {
+if (UE4Lua != null && fs.existsSync(UE4Lua)) {
 	fs.watch(UE4Lua, (event, filename) => {
 		ReRunLuaInspect()
 	})

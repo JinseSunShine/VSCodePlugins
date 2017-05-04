@@ -20,7 +20,11 @@ local COMPAT = require "luainspect.compat_env"
 --! require 'luainspect.typecheck' (context)
 
 -- chenliang
-local JX2Tables = require "JX2Tables"
+local CustomDecorators
+
+if SwordGame_Home then
+    CustomDecorators = require "JX2Decorators"
+end
 
 local ENABLE_RETURN_ANALYSIS = true
 local DETECT_DEADCODE = false -- may require more validation (false positives)
@@ -147,6 +151,7 @@ local function readfile(path)
     local fh, err = io.open(path, 'r')
     if fh then
         local data; data, err = fh:read'*a'
+        fh:close()
         if data then return data end
     end
     return nil, err
@@ -759,18 +764,8 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local Var1AST, Value1AST = vars_ast[1], values_ast[1]
                 if Var1AST and Var1AST.tag == 'Id' and Value1AST and Value1AST.tag == 'Table' then
                     local source = ast.lineinfo.first[4]
-                    if source then
-                        if string.match(source, "EventList.lua$") then
-                            Value1AST.JX2TableFunc = JX2Tables.EventList
-                        elseif string.match(source, "Wnd.lua$") then
-                            Value1AST.JX2TableFunc = JX2Tables.CheckZOrder
-                        elseif string.match(source, "ZOrder.lua$") or string.match(source, "UILevelPath.lua$") then
-                            Value1AST.JX2TableFunc = JX2Tables.CheckWnd
-                        elseif string.match(source, "LocText[/\\]+LocTextETeamTarget.lua$") then
-                            Value1AST.JX2TableFunc = function(ast) JX2Tables.LocText(ast, true) end
-                        elseif string.match(source, "LocText[/\\]+LocText[%w_]+.lua$") then
-                            Value1AST.JX2TableFunc = JX2Tables.LocText
-                        end
+                    if source and CustomDecorators then
+                        Value1AST.TableDecorator = CustomDecorators:GetTableDecorator(source)
                     end
                 end
             end
@@ -944,23 +939,16 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local spath = ast.lineinfo.first[4] -- a HACK? relies on AST lineinfo
                 local val = M.require_inspect(argvalues[1], report, spath:gsub('[^\\/]+$', ''))
 
-                if SwordGame_Home and argvalues[1] == "UI" then
-                    for wnd_id, wnd_tab in pairs(SwordGame_Wnds) do
-                        if wnd_tab.szWndName then
-                            val[wnd_tab.szWndName:sub(4)] = wnd_tab.nID
-                        end
-                    end
-                    for prefab_id, prefab_tab in pairs(SwordGame_Prefabs) do
-                        if prefab_tab.szPrefabName then
-                            val[prefab_tab.szPrefabName:sub(2)] = prefab_tab.nID
-                        end
-                    end
-                end
 
                 if known(val) and val ~= nil then
                     ast.valuelist = {val, n=1}
                     ast.value = ast.valuelist[1]
                 end -- note: on nil value, assumes analysis failed (not found). This is a heuristic only.
+
+                if CustomDecorators then
+                    CustomDecorators:DecorateGlobalFunction("require", argvalues, ast.valuelist)
+                end
+
                 found = known(ast.value) and ast.value ~= nil
             end
             -- Attempt call if safe.
@@ -991,17 +979,8 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local retvals = info and info.retvals
                 if retvals then
                     ast.valuelist = copytable(retvals);
-                    if isUIManagerGetWnd and known(argvalues[2]) and type(argvalues[2]) == 'number' and SwordGame_Wnds[argvalues[2]] then
-                        local szScript = SwordGame_Wnds[argvalues[2]].szScriptName
-                        if SwordGame_LuaPath[szScript] then
-                            local val = M.require_inspect(szScript, report, SwordGame_LuaPath[szScript]:gsub('[^\\/]+$', ''))
-                            if known(val) and val ~= nil then
-                                ast.valuelist = {val, n=1}
-                                ast.value = ast.valuelist[1]
-                            end
-                        end
-                    else
-                        ast.valuelist = copytable(retvals);
+                    if isinvoke and CustomDecorators then
+                        CustomDecorators:DecorateInvokeFunction(ast[2].value, argvalues, ast.valuelist)
                     end
                     ast.value = ast.valuelist[1]
                 elseif known(func) and type(func) == 'table' then -- chenliang3 hack to luaclass
@@ -1052,10 +1031,10 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
     end
     elseif ast.tag == 'Table' then
         if ast.value == nil then -- avoid redefinition
-            local JX2TableFunc = ast.JX2TableFunc
-            if JX2TableFunc then
-                JX2TableFunc(ast)
-                ast.JX2TableFunc = nil
+            local TableDecorator = ast.TableDecorator
+            if TableDecorator then
+                TableDecorator(ast)
+                ast.TableDecorator = nil
             else
                 local value = {}
                 local n = 1

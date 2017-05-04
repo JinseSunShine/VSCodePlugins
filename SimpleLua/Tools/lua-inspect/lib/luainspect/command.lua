@@ -28,8 +28,7 @@ end
 
 SwordGame_Home = os.getenv("SWORDGAME_HOME")
 SwordGame_LuaPath = {}
-SwordGame_Wnds = {}
-SwordGame_Prefabs = {}
+local FilesToCheck = {}
 if SwordGame_Home then
     SwordGame_Home = string.gsub(SwordGame_Home, '\\\\', '/')
     SwordGame_Home = string.gsub(SwordGame_Home, '\\', '/')
@@ -47,10 +46,11 @@ if SwordGame_Home then
                 elseif attr.mode == "file" and item:match("%.lua$") then
                     bHaveLuaScript = true
                     SwordGame_LuaPath[item:sub(0, -5)] = item_full
+                    FilesToCheck[item:sub(0, -5)] = item_full
                 end
             end
         end
-        if bHaveLuaScript then
+        if bHaveLuaScript and table_dirs then
             table.insert(table_dirs, current_dir .. "\\?.lua")
         end
     end
@@ -58,22 +58,7 @@ if SwordGame_Home then
     GatherDir(SwordGame_Home .. "/Scripts", all_dirs)
     package.path = package.path..';'..table.concat(all_dirs, ";")
 
-    local json = require"json"
-    local wnd_json, err_ = loadfile(SwordGame_Home .. "/Content/GameData/Client/UI/Wnd.json")
-    if wnd_json then
-        local wnds = json.decode(wnd_json)
-        for _, wnd_tab in pairs(wnds[1]) do
-            SwordGame_Wnds[wnd_tab.nID] = wnd_tab
-        end
-    end
-
-    local prefab_json, err_ = loadfile(SwordGame_Home .. "/Content/GameData/Client/UI/Prefab.json")
-    if prefab_json then
-        local prefabs = json.decode(prefab_json)
-        for _, prefab_tab in pairs(prefabs[1]) do
-            SwordGame_Prefabs[prefab_tab.nID] = prefab_tab
-        end
-    end
+    package.path = package.path..';'..SwordGame_Home..'/Source/CMakeModules/bin/SimpleLuaLib/?.lua'
 
     SwordGame_LuaPath["profiler"] = "C++"
     SwordGame_LuaPath["mime.core"] = "C++"
@@ -99,13 +84,75 @@ end
 local fmt = getopt 'f' or 'delimited'
 local ast_to_text =
     (fmt == 'delimited') and require 'luainspect.delimited'.ast_to_delimited or
+    (fmt == 'AllScripts') and require 'luainspect.ErrorList'.ast_to_ErrorList or
     (fmt == 'html') and require 'luainspect.html'.ast_to_html or
     fail('invalid format specified, -f'..fmt)
 local libpath = getopt 'l' or '.'
 local outpath = getopt 'o' or '-'
 
+local function CheckFile(path)
+    local src = loadfile(path)
+    if src:len() == 0 then
+        return 0
+    end
+
+    local ast, err, linenum, colnum, linenum2 = LA.ast_from_string(src, path)
+
+    --require "metalua.table2"; table.print(ast, 'hash', 50)
+    if ast then
+        local tokenlist = LA.ast_to_tokenlist(ast, src)
+
+        LI.inspect(ast, tokenlist, src, report, 1)
+        LI.inspect(ast, tokenlist, src, report, 2)
+        LI.inspect(ast, tokenlist, src, report, 3)
+        LI.inspect(ast, tokenlist, src, report, 4)
+        LI.mark_related_keywords(ast, tokenlist, src)
+
+        local output = ast_to_text(ast, src, tokenlist, {libpath=libpath})
+
+        return 0, output
+    else
+        return 1, {ErrorType="syntax", line = linenum, colnum = colnum, msg = err}
+    end
+end
+
 local path = unpack(arg)
-if not path then
+local json = require "json"
+if path then
+    local nCode, Result = CheckFile(path)
+    if outpath == '-' then
+        if nCode == 0 then
+            io.stdout:write(Result)
+        else
+            io.stderr:write(json.encode(Result))
+        end
+    else
+        writefile(outpath, Result)
+    end
+    os.exit(nCode)
+elseif fmt == 'AllScripts' then
+    local ErrorListFile = assert(io.open("LuaCheck.log", 'wb'))
+    for ScriptName, ScriptPath in pairs(SwordGame_LuaPath) do
+        if ScriptPath ~= "C++" then
+            local nCode, Result = CheckFile(ScriptPath)
+            if Result then
+                if nCode == 0 then
+                    for _, ErrorInfo in pairs(Result) do
+                        local ErrorDesc = string.format("Line %d of %s%.lua: %s : %s\n", ErrorInfo.Line, ScriptName, 
+                            ErrorInfo.Token, ErrorInfo.ValueDesc)
+                        ErrorListFile:write(ErrorDesc)
+                    end
+                else
+                    local ErrorDesc = string.format("%s%.lua: %s\n", ScriptName, Result.msg)
+                    ErrorListFile:write(ErrorDesc)
+                end
+            end
+        end
+    end
+    if ErrorListFile then
+        ErrorListFile:close()
+    end
+else
     fail[[
 inspect.lua [options] <path.lua>
   -f {delimited|html} - output format
@@ -113,37 +160,5 @@ inspect.lua [options] <path.lua>
   -o path   output path (defaults to standard output (-)
 ]]
 end
-
-local src = loadfile(path)
-if src:len() == 0 then
-    os.exit(0)
-end
-
-local ast, err, linenum, colnum, linenum2 = LA.ast_from_string(src, path)
-
---require "metalua.table2"; table.print(ast, 'hash', 50)
-if ast then
-    local tokenlist = LA.ast_to_tokenlist(ast, src)
-
-    LI.inspect(ast, tokenlist, src, report, 1)
-    LI.inspect(ast, tokenlist, src, report, 2)
-    LI.inspect(ast, tokenlist, src, report, 3)
-    LI.inspect(ast, tokenlist, src, report, 4)
-    LI.mark_related_keywords(ast, tokenlist, src)
-
-    local output = ast_to_text(ast, src, tokenlist, {libpath=libpath})
-
-    if outpath == '-' then
-        io.stdout:write(output)
-    else
-        writefile(outpath, output)
-    end
-else
-    local json = require "json"
-    local error_json = json.encode({ErrorType="syntax", line = linenum, colnum = colnum, msg = err})
-    io.stderr:write(error_json)
-    os.exit(1)
-end
-
 
 
