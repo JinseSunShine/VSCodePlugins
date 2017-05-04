@@ -131,6 +131,7 @@ if path then
     end
     os.exit(nCode)
 elseif fmt == 'AllScripts' then
+    local nExitCode = 0
     local ErrorListFile = assert(io.open("LuaCheck.log", 'wb'))
     for ScriptName, ScriptPath in pairs(SwordGame_LuaPath) do
         if ScriptPath ~= "C++" then
@@ -146,12 +147,14 @@ elseif fmt == 'AllScripts' then
                     local ErrorDesc = string.format("%s%.lua: %s\n", ScriptName, Result.msg)
                     ErrorListFile:write(ErrorDesc)
                 end
+                nExitCode = 1
             end
         end
     end
     if ErrorListFile then
         ErrorListFile:close()
     end
+    os.exit(nExitCode)
 else
     fail[[
 inspect.lua [options] <path.lua>
