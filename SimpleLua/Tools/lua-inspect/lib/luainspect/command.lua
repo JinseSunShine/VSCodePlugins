@@ -6,7 +6,9 @@
 package.path = package.path .. ';metalualib/?.lua'
 package.path = package.path .. ';lib/?.lua'
 
-require("mobdebug").start(nil, require("mobdebug").port + 1)
+-- require("mobdebug").start(nil, require("mobdebug").port + 1)
+-- local profiler = require "profiler"
+-- profiler.start("xxx.log")
 
 local function loadfile(filename)
     local fh = assert(io.open(filename, 'r'))
@@ -101,11 +103,8 @@ local function CheckFile(path)
     --require "metalua.table2"; table.print(ast, 'hash', 50)
     if ast then
         local tokenlist = LA.ast_to_tokenlist(ast, src)
-
-        LI.inspect(ast, tokenlist, src, report, 1)
-        LI.inspect(ast, tokenlist, src, report, 2)
-        LI.inspect(ast, tokenlist, src, report, 3)
-        LI.inspect(ast, tokenlist, src, report, 4)
+	Max_Walk_Depth = 4
+        LI.inspect(ast, tokenlist, src, report, Max_Walk_Depth)
         LI.mark_related_keywords(ast, tokenlist, src)
 
         local output = ast_to_text(ast, src, tokenlist, {libpath=libpath})
@@ -132,19 +131,30 @@ if path then
     os.exit(nCode)
 elseif fmt == 'AllScripts' then
     local nExitCode = 0
+    local FilesToIgnore = {
+        "smtp",
+        "tp",
+        "mobdebug",
+        "http",
+        "ftp",
+    }
+    for _, ScriptName in pairs(FilesToIgnore) do
+        FilesToIgnore[ScriptName] = true
+    end
+
     local ErrorListFile = assert(io.open("LuaCheck.log", 'wb'))
     for ScriptName, ScriptPath in pairs(SwordGame_LuaPath) do
-        if ScriptPath ~= "C++" then
+        if ScriptPath ~= "C++" and not FilesToIgnore[ScriptName] then
             local nCode, Result = CheckFile(ScriptPath)
             if Result then
                 if nCode == 0 then
                     for _, ErrorInfo in pairs(Result) do
-                        local ErrorDesc = string.format("Line %d of %s%.lua: %s : %s\n", ErrorInfo.Line, ScriptName, 
+                        local ErrorDesc = string.format("Line %d of %s.lua: %s : %s\n", ErrorInfo.Line, ScriptName, 
                             ErrorInfo.Token, ErrorInfo.ValueDesc)
                         ErrorListFile:write(ErrorDesc)
                     end
                 else
-                    local ErrorDesc = string.format("%s%.lua: %s\n", ScriptName, Result.msg)
+                    local ErrorDesc = string.format("%s.lua: %s\n", ScriptName, Result.msg)
                     ErrorListFile:write(ErrorDesc)
                 end
                 nExitCode = 1

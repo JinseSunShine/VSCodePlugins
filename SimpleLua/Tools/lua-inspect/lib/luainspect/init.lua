@@ -1095,7 +1095,7 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
             end
         end
     end
-    end)
+    end, 0, nPass - 1)
 end
 
 
@@ -1291,7 +1291,9 @@ function M.inspect(top_ast, tokenlist, src, report, nPass)
 
     M.eval_comments(top_ast, tokenlist, report)
 
-    M.infer_values(top_ast, tokenlist, src, report, nPass)
+    for nIndex = 1, nPass do
+        M.infer_values(top_ast, tokenlist, src, report, nIndex)
+    end
 
     -- Make some nodes as having values related to its parent.
     -- This allows clicking on `bar` in `foo.bar` to display
