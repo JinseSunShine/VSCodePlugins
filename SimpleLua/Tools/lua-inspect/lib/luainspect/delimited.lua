@@ -10,14 +10,6 @@ local LA = require "luainspect.ast"
 local T = require "luainspect.types"
 local LS = require "luainspect.signatures"
 
-local function escape(s)
-    s = s:gsub('\n', '\\n') -- escape new lines
-    -- s = s:gsub('"', '""') -- escape double quotes
-    -- if s:match'[\r\n]' then s = '"'..s..'"' end -- escape with double quotes
-    return s
-end
-
-
 local function describe(token, tokenlist, src, ID_Value_Map)
     if token then
         local ast = token.ast
