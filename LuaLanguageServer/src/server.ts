@@ -24,6 +24,7 @@ let fs = require("fs")
 let path = require("path")
 
 let CustomType_completion_array = null
+let LuaRequire_completion_array = null
 
 let UE4Lua = null
 let CustomTypesDir = null
@@ -37,6 +38,22 @@ function ReRunLuaInspect() {
 	for (let [k, doc_item] of documents) {
 		run_lua_inspect(doc_item)
 	}
+}
+
+function ConstructLuaRequireCompletions() {
+	let result = new Array<CompletionItem>()
+	if (workspaceRoot != null && fs.existsSync(workspaceRoot)) {
+		let files = fs.readdirSync(workspaceRoot)
+		for (let filename of files) {
+			if (filename && filename.endsWith(".lua")) {
+				filename = filename.substring(0, filename.length - 4)
+				let item = CompletionItem.create(filename)
+				item.kind = CompletionItemKind.File
+				result.push(item)
+			}
+		}
+	}
+	return result
 }
 
 function ConstructCustomTypeCompletions() {
@@ -697,7 +714,10 @@ let func_oncompletion = function (params, token) {
 			else {
 				matches = the_substr.match(/require[ (]*["'](\w*)$/)
 				if (matches != null) {
-					id_name = 'require'
+					if (LuaRequire_completion_array == null) {
+						LuaRequire_completion_array = ConstructLuaRequireCompletions()
+					}
+					return LuaRequire_completion_array
 				}
 				else {
 					matches = the_substr.match(/AnnotateType[ ]*\(["'](\w*)$/)
