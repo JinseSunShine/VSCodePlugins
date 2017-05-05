@@ -153,7 +153,7 @@ class MockDebugSession extends DebugSession {
 		}
 		scan_dir.call(this, args.projectDir, this.script_path_map);
 
-		const working_dir = path.join(path.dirname(__dirname), "Tools");
+		const working_dir = path.join(path.dirname(__dirname), "Tools/bin");
 		process.chdir(working_dir);
 
 		const log_stream = require('fs').createWriteStream("SimpleLua.log");

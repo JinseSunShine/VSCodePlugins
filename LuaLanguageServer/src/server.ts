@@ -245,7 +245,7 @@ let File_LuaInspect_Map = new Map()
 let CachedTaskToRun_Map = new Map()
 
 function StartLuaInspectProcess(document_item, file_path) {
-	const working_dir = path.join(path.dirname(__dirname), "../Tools");
+	const working_dir = path.join(path.dirname(__dirname), "../Tools/bin");
 	process.chdir(working_dir);
 
 	connection.console.log(`run luainspect on file: ${file_path}\n`)
