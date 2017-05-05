@@ -32,8 +32,8 @@ local function describe(token, tokenlist, src)
         local Attributes = LI.get_var_attributes(ast)
         if HaveAttr(Attributes, "unknown") and HaveAttr(Attributes, "global") then
             return {ValueDesc = "unknown global"}
-        elseif ast.JX2Error then
-            return {ValueDesc = ast.JX2Error}
+        elseif ast.CustormError then
+            return {ValueDesc = ast.CustormError}
         end
 
         local vast = ast.seevalue or ast

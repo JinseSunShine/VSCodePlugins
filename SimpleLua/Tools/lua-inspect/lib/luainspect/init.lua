@@ -784,8 +784,8 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local value
                 if value_ast then
                     value = value_ast.value
-                    if value_ast.JX2Error then
-                        var_ast.JX2Error = value_ast.JX2Error
+                    if value_ast.CustormError then
+                        var_ast.CustormError = value_ast.CustormError
                     end
                 elseif valuelist then
                     local vlidx = i - #values_ast + 1
@@ -1244,7 +1244,7 @@ function M.uninspect(top_ast)
         ast.localmasked = nil
         ast.localmasking = nil
         
-        ast.JX2Error = nil
+        ast.CustormError = nil
 
         -- undo mark_identifiers
         ast.id = nil
@@ -1527,8 +1527,7 @@ function M.get_var_attributes(ast)
     else
         attributes[#attributes+1] = "FIX" -- shouldn't happen?
     end
-    if GetFunctionNote(ast)
-    then
+    if GetFunctionNote(ast) then
         attributes[#attributes+1] = 'warn'
     end
     return attributes
@@ -1571,8 +1570,8 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         lines[#lines+1] = {Type="Hint", Value=value_str}
     end
 
-    if ast.JX2Error then
-        lines[#lines+1] = {Type="Error", Value=ast.JX2Error}
+    if ast.CustormError then
+        lines[#lines+1] = {Type="Error", Value=ast.CustormError}
     end
 
     local fpos, fline, path = M.ast_to_definition_position(ast, tokenlist)

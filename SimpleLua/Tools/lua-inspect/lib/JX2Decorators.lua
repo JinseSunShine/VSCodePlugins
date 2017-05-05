@@ -28,7 +28,7 @@ local EventListDecorator = function(ast)
             local k, v = east[1].value, east[2].value
             if type(k) == "string" and type(v) == "table" and #v == 0 then
                 if Result[k] then
-                    east[1].JX2Error = "Duplicate Events"
+                    east[1].CustormError = "Duplicate Events"
                 else
                     Result[k] = EventTemplateValue
                 end
@@ -55,22 +55,22 @@ local LocTextDecorator = function(ast, CheckGameDefine)
             local key = east[4].value -- Param2 of NSLOCTEXT
             local text = east[5].value -- Param3 of NSLOCTEXT
             if key and type(key) == "string" and text and type(text) == "string" then
-                local JX2Error
+                local CustormError
                 if ExistKey[key] then
-                    JX2Error = "Duplicate Key"
+                    CustormError = "Duplicate Key"
                 elseif ExistText[text] then
-                    JX2Error = "Duplicate Text"
+                    CustormError = "Duplicate Text"
                 elseif GameDefine then
                     local KeyValue = GameDefine[key]
                     if not KeyValue then
-                        JX2Error = string.format("%s is not defined", key)
+                        CustormError = string.format("%s is not defined", key)
                     elseif KeyValue ~= (nIndex - 1) then
-                        JX2Error = string.format("%s is defined as the %d enum", key, KeyValue+1)
+                        CustormError = string.format("%s is defined as the %d enum", key, KeyValue+1)
                     end
                 end
 
-                if JX2Error then
-                    east[2].JX2Error = JX2Error
+                if CustormError then
+                    east[2].CustormError = CustormError
                 else
                     Result[key] = {}
                 end
@@ -89,7 +89,7 @@ local ZOrderDecorator = function(ast)
             if type(east) == 'table' and east.tag == 'Pair' then
                 local k = east[1].value
                 if type(k) == "string" and not ZOrder[k] then
-                    east[1].JX2Error = "Assign a ZOrder to this wnd"
+                    east[1].CustormError = "Assign a ZOrder to this wnd"
                 end
             end
         end
@@ -104,9 +104,9 @@ local WndDecorator = function(ast)
             if type(east) == 'table' and east.tag == 'Pair' then
                 local k = east[1].value
                 if type(k) == "string" and not Wnd[k] then
-                    east[1].JX2Error = "This wnd didn't exist"
+                    east[1].CustormError = "This wnd didn't exist"
                 elseif ExistKeys[k] then
-                    east[1].JX2Error = "Duplicate Name"
+                    east[1].CustormError = "Duplicate Name"
                 end
                 ExistKeys[k] = true
             end
