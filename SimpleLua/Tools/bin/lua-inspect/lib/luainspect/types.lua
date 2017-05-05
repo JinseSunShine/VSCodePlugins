@@ -6,7 +6,7 @@ T.istype = {}
 -- iserror[o] iff o represents an error type (created via T.error).
 T.iserror = {}
 
-T.IsVSCodeError = {}
+T.IsCustomError = {}
 
 -- istabletype[o] iff o represents a table type (created by T.table).
 T.istabletype = {}
@@ -77,13 +77,13 @@ function T.error(val)
   return self
 end
 
--- VSCodeError type
-local VSCodeError = {}; VSCodeError.__index = VSCodeError
-function VSCodeError.__tostring(self) return tostring(self.value) end
-function T.VSCodeError(val)
-  local self = setmetatable({value=val}, VSCodeError)
+-- CustomError type
+local CustomError = {}; CustomError.__index = CustomError
+function CustomError.__tostring(self) return tostring(self.value) end
+function T.CustomError(val)
+  local self = setmetatable({value=val}, CustomError)
   T.istype[self] = true
-  T.IsVSCodeError[self] = true
+  T.IsCustomError[self] = true
   return self
 end
 

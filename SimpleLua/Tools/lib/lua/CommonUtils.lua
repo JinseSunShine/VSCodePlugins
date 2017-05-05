@@ -15,12 +15,12 @@ function CommonUtils.SetStaticTable(TabVar, Depth, IgnoreCase)
             end
         end
         if type(Key) == "string" and Key ~= "unknown" then
-            return LS_Types.VSCodeError("Non Exist Key")
+            return LS_Types.CustomError("Non Exist Key")
         end
     end
     MetaTable.__newindex = function(Table, Key, Value)
         if type(Key) == "string" and Key ~= "unknown" then
-            Table[Key] = LS_Types.VSCodeError("Non Exist Key")
+            Table[Key] = LS_Types.CustomError("Non Exist Key")
         end
     end
     setmetatable(TabVar, MetaTable)

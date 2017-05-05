@@ -32,12 +32,12 @@ local function describe(token, tokenlist, src)
         local Attributes = LI.get_var_attributes(ast)
         if HaveAttr(Attributes, "unknown") and HaveAttr(Attributes, "global") then
             return {ValueDesc = "unknown global"}
-        elseif ast.CustormError then
-            return {ValueDesc = ast.CustormError}
+        elseif ast.CustomErrorNote then
+            return {ValueDesc = ast.CustomErrorNote}
         end
 
         local vast = ast.seevalue or ast
-        if Types.IsVSCodeError[vast.value] then
+        if Types.IsCustomError[vast.value] then
             return {ValueDesc = tostring(vast.value)}
         end
     end

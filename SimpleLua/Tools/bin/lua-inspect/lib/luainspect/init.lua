@@ -784,8 +784,8 @@ function M.infer_values(top_ast, tokenlist, src, report, nPass)
                 local value
                 if value_ast then
                     value = value_ast.value
-                    if value_ast.CustormError then
-                        var_ast.CustormError = value_ast.CustormError
+                    if value_ast.CustomErrorNote then
+                        var_ast.CustomErrorNote = value_ast.CustomErrorNote
                     end
                 elseif valuelist then
                     local vlidx = i - #values_ast + 1
@@ -1244,7 +1244,7 @@ function M.uninspect(top_ast)
         ast.localmasked = nil
         ast.localmasking = nil
         
-        ast.CustormError = nil
+        ast.CustomErrorNote = nil
 
         -- undo mark_identifiers
         ast.id = nil
@@ -1562,7 +1562,7 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         else
             lines[#lines+1] = {Type="Hint", Value=value_str}
         end
-    elseif T.IsVSCodeError[vast.value] then
+    elseif T.IsCustomError[vast.value] then
         lines[#lines+1] = {Type="Error", Value=value_str}
     elseif T.iserror[vast.value] then
         lines[#lines+1] = {Type="LuaInspectError", Value=value_str}
@@ -1570,8 +1570,8 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
         lines[#lines+1] = {Type="Hint", Value=value_str}
     end
 
-    if ast.CustormError then
-        lines[#lines+1] = {Type="Error", Value=ast.CustormError}
+    if ast.CustomErrorNote then
+        lines[#lines+1] = {Type="Error", Value=ast.CustomErrorNote}
     end
 
     local fpos, fline, path = M.ast_to_definition_position(ast, tokenlist)
