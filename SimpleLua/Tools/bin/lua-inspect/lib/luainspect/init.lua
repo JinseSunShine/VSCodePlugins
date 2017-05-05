@@ -1608,7 +1608,7 @@ function M.get_value_details(ast, tokenlist, src, ID_Value_Map)
 
     local func_note = GetFunctionNote(ast)
     if func_note then
-        lines[#lines+1] = {Type="Warning", Value=func_note}
+        lines[#lines+1] = {Type="Error", Value=func_note}
         if not sig then
             lines[#lines+1] = {Type="Signature"}
         end

@@ -36,9 +36,11 @@ local function describe(token, tokenlist, src)
             return {ValueDesc = ast.CustomErrorNote}
         end
 
-        local vast = ast.seevalue or ast
-        if Types.IsCustomError[vast.value] then
-            return {ValueDesc = tostring(vast.value)}
+        local ValueDescs = LI.get_value_details(ast, tokenlist, src)
+        for _, Desc in pairs(ValueDescs) do
+            if Desc.Type == "Error" then
+                return {ValueDesc = Desc.Value}
+            end
         end
     end
 end
