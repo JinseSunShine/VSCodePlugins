@@ -383,17 +383,7 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 		if (range_lines[index].startsWith("{")) {
 			let json_data = JSON.parse(range_lines[index])
 			if (json_data != null) {
-				let RequireCandidates = json_data["RequireCandidates"]
-				if (RequireCandidates && Array.isArray(RequireCandidates)) {
-					let completions = new Array<CompletionItem>()
-					for (let require_name of RequireCandidates) {
-						let item = CompletionItem.create(require_name)
-						item.kind = CompletionItemKind.File
-						completions.push(item)
-					}
-					map_token_completions.set("require", completions)
-				}
-				else if (json_data["ID_Value_Map"]) {
+				if (json_data["ID_Value_Map"]) {
 					if (Array.isArray(json_data["ID_Value_Map"])) {
 						for (let ID_Value of json_data["ID_Value_Map"]) {
 							let all_completions = new Array<CompletionItem>()

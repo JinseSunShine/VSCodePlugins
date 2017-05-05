@@ -10,3 +10,5 @@ Tools/lua-inspect/htmls/**/*
 !node_modules/vscode-debugprotocol/**/*
 !node_modules/vscode-debugadapter/**/*
 !node_modules/vscode-languageclient/**/*
+!node_modules/vscode-jsonrpc/**/*
+!node_modules/vscode-languageserver-types/**/*
