@@ -42,12 +42,7 @@ end
 function M.ast_to_delimited(ast, src, tokenlist)
     local fmt_tokens = {}
 
-    local require_candidates = {}
-    for k, _ in pairs(SwordGame_LuaPath) do
-        table.insert(require_candidates, k)
-    end
     local json = require "json"
-    fmt_tokens[#fmt_tokens + 1] = json.encode({RequireCandidates = require_candidates})
 
     local global_completions = {}
     for k, v in pairs(LI.GetGlobalsFromUE4()) do
