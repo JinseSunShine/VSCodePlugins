@@ -10,17 +10,23 @@
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
 			"sourceMaps": true,
-			"outDir": "${workspaceRoot}/out",
+			"outFiles": [
+				"${workspaceRoot}/out/**/*.js"
+			],
 			"preLaunchTask": "npm"
 		},
 		{
 			"name": "Run Server",
 			"type": "node",
 			"request": "launch",
-			"runtimeArgs": [ "--nolazy" ],
+			"runtimeArgs": [
+				"--nolazy"
+			],
 			"program": "${workspaceRoot}/src/mockDebug.ts",
 			"stopOnEntry": false,
-			"args": [ "--server=4711" ],
+			"args": [
+				"--server=4711"
+			],
 			"sourceMaps": true,
 			"outDir": "${workspaceRoot}/out",
 			"cwd": "${workspaceRoot}"
@@ -30,10 +36,14 @@
 			"type": "node",
 			"request": "launch",
 			"program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
-			"runtimeArgs": [ "--nolazy" ],
+			"runtimeArgs": [
+				"--nolazy"
+			],
 			"args": [
-				"-u", "tdd",
-				"--timeout", "999999",
+				"-u",
+				"tdd",
+				"--timeout",
+				"999999",
 				"--colors",
 				"./out/tests/"
 			],

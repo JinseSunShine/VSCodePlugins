@@ -5,6 +5,9 @@
 		"moduleResolution": "node",
 		"inlineSourceMap": true,
 		"outDir": "../out",
+		"lib": [
+			"es2016"
+		],
 		"noImplicitAny": false,
 		"removeComments": false,
 		"preserveConstEnums": true

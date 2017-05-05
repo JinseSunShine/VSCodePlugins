@@ -40,18 +40,25 @@ function ReRunLuaInspect() {
 	}
 }
 
+let scan_dir = function (cur_dir, ComplteItemArray) {
+	for (let Item of fs.readdirSync(cur_dir)) {
+		let abs_path = path.join(cur_dir, Item);
+		let fs_state = fs.statSync(abs_path);
+		if (fs_state.isFile() && Item.endsWith(".lua")) {
+			let filename = Item.substring(0, Item.length - 4)
+			let item = CompletionItem.create(filename)
+			item.kind = CompletionItemKind.File
+			ComplteItemArray.push(item)
+		}
+		else if (fs_state.isDirectory()) {
+			scan_dir.call(this, abs_path, ComplteItemArray);
+		}
+	}
+}
 function ConstructLuaRequireCompletions() {
 	let result = new Array<CompletionItem>()
 	if (workspaceRoot != null && fs.existsSync(workspaceRoot)) {
-		let files = fs.readdirSync(workspaceRoot)
-		for (let filename of files) {
-			if (filename && filename.endsWith(".lua")) {
-				filename = filename.substring(0, filename.length - 4)
-				let item = CompletionItem.create(filename)
-				item.kind = CompletionItemKind.File
-				result.push(item)
-			}
-		}
+		scan_dir(workspaceRoot, result)
 	}
 	return result
 }
@@ -94,6 +101,11 @@ if (UE4Lua != null && fs.existsSync(UE4Lua)) {
 let workspaceRoot: string;
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
+
+	fs.watch(workspaceRoot, {recursive : true}, (event, filename) => {
+		LuaRequire_completion_array = null
+	})
+
 	return {
 		capabilities: {
 			textDocumentSync: TextDocumentSyncKind.Full,

@@ -310,7 +310,7 @@ end
 function M.walk(ast, fdown, fup, function_depth, max_function_depth)
   assert(type(ast) == 'table')
   function_depth = function_depth or 0
-  max_function_depth = max_function_depth or Max_Walk_Depth
+  max_function_depth = max_function_depth or math.huge
   if function_depth > max_function_depth then
     return
   end

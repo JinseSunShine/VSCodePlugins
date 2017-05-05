@@ -103,8 +103,7 @@ local function CheckFile(path)
     --require "metalua.table2"; table.print(ast, 'hash', 50)
     if ast then
         local tokenlist = LA.ast_to_tokenlist(ast, src)
-	Max_Walk_Depth = 4
-        LI.inspect(ast, tokenlist, src, report, Max_Walk_Depth)
+        LI.inspect(ast, tokenlist, src, report, 4)
         LI.mark_related_keywords(ast, tokenlist, src)
 
         local output = ast_to_text(ast, src, tokenlist, {libpath=libpath})

@@ -1,25 +1,22 @@
 {
-	"name": "language-server-example",
-	"description": "Example implementation of a language server in node.",
-	"version": "0.0.1",
-	"author": "Microsoft Corporation",
-	"license": "MIT",
-	"engines": {
-		"node": "^5.10.0"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/Microsoft/vscode-mock-debug.git"
-	},
-	"dependencies": {
-		"vscode-languageserver": "^2.2.0",
-		"vscode-uri": "^0.0.7"
-	},
-	"devDependencies": {
-		"typescript": "^1.8.9"
-	},
-	"scripts": {
-		"compile": "installServerIntoExtension ../SimpleLua/out ./package.json ./tsconfig.json && tsc -p .",
-		"watch": "installServerIntoExtension ../SimpleLua/out ./package.json ./tsconfig.json && tsc -p ."
-	}
+  "name": "language-server-example",
+  "description": "Example implementation of a language server in node.",
+  "version": "0.0.1",
+  "author": "Microsoft Corporation",
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  },
+  "dependencies": {
+    "vscode-languageserver": "^3.1.0",
+    "vscode-uri": "^0.0.7"
+  },
+  "devDependencies": {
+    "@types/node": "^6.0.52",
+    "typescript": "^2.1.5"
+  },
+  "scripts": {
+    "compile": "installServerIntoExtension ../SimpleLua/out ./package.json ./tsconfig.json && tsc -p .",
+    "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc --watch -p ."
+  }
 }

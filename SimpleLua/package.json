@@ -9,8 +9,8 @@
 		"email": "qq410029478@163.com"
 	},
 	"engines": {
-		"vscode": "^1.4.0",
-		"node": "^5.10.0"
+		"vscode": "^1.8.0",
+		"node": "*"
 	},
 	"icon": "images/sven_vert.jpg",
 	"categories": [
@@ -25,15 +25,15 @@
 		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
 	},
 	"dependencies": {
-		"vscode-debugprotocol": "^1.11.0-pre.8",
-		"vscode-debugadapter": "^1.11.0-pre.6",
-		"vscode-languageclient": "^2.2.1"
+		"vscode-debugprotocol": "^1.19.0",
+		"vscode-debugadapter": "^1.19.0",
+		"vscode-languageclient": "^3.1.0"
 	},
 	"devDependencies": {
-		"typescript": "^1.8.9",
-		"mocha": "^2.4.5",
-		"vscode": "^0.11.0",
-		"vscode-debugadapter-testsupport": "^1.11.0-pre.0"
+		"@types/mocha": "^2.2.33",
+		"@types/node": "^6.0.52",
+		"typescript": "^2.1.5",
+		"vscode": "^1.0.3"
 	},
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/typescript/bin/tsc -p ./src",
