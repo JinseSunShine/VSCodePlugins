@@ -64,21 +64,15 @@ function ConstructLuaRequireCompletions() {
 }
 
 function ConstructCustomTypeCompletions() {
-	CustomType_completion_array = new Array<CompletionItem>()
+	let result = new Array<CompletionItem>()
 	let item = CompletionItem.create("Config_C")
 	item.kind = CompletionItemKind.Class
-	CustomType_completion_array.push(item)
+	result.push(item)
+
 	if (CustomTypesDir != null && fs.existsSync(CustomTypesDir)) {
-		let files = fs.readdirSync(CustomTypesDir)
-		for (let filename of files) {
-			if (filename && filename.endsWith(".lua")) {
-				let type_name = filename.substring(0, filename.length - 4)
-				item = CompletionItem.create(type_name)
-				item.kind = CompletionItemKind.Class
-				CustomType_completion_array.push(item)
-			}
-		}
+		scan_dir(CustomTypesDir, result)
 	}
+	return result
 }
 
 if (CustomTypesDir != null && fs.existsSync(CustomTypesDir)) {
@@ -245,7 +239,7 @@ let File_LuaInspect_Map = new Map()
 let CachedTaskToRun_Map = new Map()
 
 function StartLuaInspectProcess(document_item, file_path) {
-	const working_dir = path.join(path.dirname(__dirname), "../Tools/bin");
+	const working_dir = path.join(path.dirname(__dirname), "../LuaTools/bin");
 	process.chdir(working_dir);
 
 	connection.console.log(`run luainspect on file: ${file_path}\n`)
@@ -725,7 +719,7 @@ let func_oncompletion = function (params, token) {
 					matches = the_substr.match(/AnnotateType[ ]*\(["'](\w*)$/)
 					if (matches != null) {
 						if (CustomType_completion_array == null) {
-							ConstructCustomTypeCompletions()
+							CustomType_completion_array = ConstructCustomTypeCompletions()
 						}
 						return CustomType_completion_array
 					}
