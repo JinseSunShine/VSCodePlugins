@@ -1,1 +1,1 @@
-SimpleLua\LuaTools\bin\lua.exe SimpleLua\LuaTools\bin\lua-inspect\luainspect -fAllScripts
+SimpleLua\LuaTools\bin\lua.exe SimpleLua\LuaTools\bin\lua-inspect\luainspect -fAllScripts > LuaCheck.log
