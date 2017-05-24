@@ -1,7 +1,7 @@
 {
 	"name": "simple-lua",
 	"displayName": "SimpleLua",
-	"version": "0.1.2",
+	"version": "0.1.6",
 	"publisher": "hehe",
 	"description": "Don't install, this plugin is used by ourselves only.",
 	"author": {

@@ -96,9 +96,12 @@ let workspaceRoot: string;
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
 
-	fs.watch(workspaceRoot, {recursive : true}, (event, filename) => {
-		LuaRequire_completion_array = null
-	})
+	if (workspaceRoot != null && fs.existsSync(workspaceRoot))
+	{
+		fs.watch(workspaceRoot, {recursive : true}, (event, filename) => {
+			LuaRequire_completion_array = null
+		})
+	}
 
 	return {
 		capabilities: {
@@ -333,6 +336,11 @@ let run_lua_inspect = function (document_item) {
 }
 
 let Parse_Inspect_Result = function (document_item, inspect_result) {
+	if(inspect_result == null)
+	{
+		return
+	}
+	
 	CheckFileQueue(document_item.uri)
 	var map_range_info = new Map();
 	MapFileInfo.set(document_item.uri, map_range_info);
