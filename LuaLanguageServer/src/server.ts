@@ -40,7 +40,7 @@ function ReRunLuaInspect() {
 	}
 }
 
-let scan_dir = function (cur_dir, ComplteItemArray) {
+function scan_dir (cur_dir, ComplteItemArray) {
 	for (let Item of fs.readdirSync(cur_dir)) {
 		let abs_path = path.join(cur_dir, Item);
 		let fs_state = fs.statSync(abs_path);
@@ -51,7 +51,7 @@ let scan_dir = function (cur_dir, ComplteItemArray) {
 			ComplteItemArray.push(item)
 		}
 		else if (fs_state.isDirectory()) {
-			scan_dir.call(this, abs_path, ComplteItemArray);
+			scan_dir(abs_path, ComplteItemArray);
 		}
 	}
 }
