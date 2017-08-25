@@ -176,7 +176,7 @@ class MockDebugSession extends DebugSession {
 				this.clearCache();
 				this.command_list = new Array();
 				this.command_list.push("updatebreakpoints");
-				this.command_list.push("run\n");
+				this.command_list.push("stack\n");
 				this.sendEvent(new OutputEvent(`Client Connected`));
 			}
 			else if (data_str.startsWith("Program finished")) {
