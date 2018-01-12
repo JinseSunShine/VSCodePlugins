@@ -118,7 +118,7 @@ class MockDebugSession extends DebugSession {
 					bp.verified = true
 					var script_path = path.basename(path_str);
 					bp_commands.push(`setb ${script_path} ${bp.line}\n`);
-					this.sendEvent(new BreakpointEvent("update", bp));
+					this.sendEvent(new BreakpointEvent("changed", <DebugProtocol.Breakpoint>{ verified: bp.verified, id: bp.id }));
 				}
 			}
 			this.command_list = bp_commands.concat(this.command_list);

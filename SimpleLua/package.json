@@ -1,7 +1,7 @@
 {
 	"name": "simple-lua",
 	"displayName": "SimpleLua",
-	"version": "0.2.4",
+	"version": "0.2.5",
 	"publisher": "hehe",
 	"description": "Don't install, this plugin is used by ourselves only.",
 	"author": {
@@ -9,7 +9,7 @@
 		"email": "qq410029478@163.com"
 	},
 	"engines": {
-		"vscode": "^1.8.0",
+		"vscode": "^1.19.0",
 		"node": "*"
 	},
 	"icon": "images/sven_vert.jpg",
@@ -25,15 +25,15 @@
 		"url": "https://github.com/Microsoft/vscode-mock-debug/issues"
 	},
 	"dependencies": {
-		"vscode-debugprotocol": "^1.19.0",
-		"vscode-debugadapter": "^1.19.0",
-		"vscode-languageclient": "^3.1.0"
+		"vscode": "^1.1.10",
+		"vscode-debugadapter": "^1.25.0",
+		"vscode-debugprotocol": "^1.25.0",
+		"vscode-languageclient": "^3.3.0"
 	},
 	"devDependencies": {
-		"@types/mocha": "^2.2.33",
-		"@types/node": "^6.0.52",
-		"typescript": "^2.1.5",
-		"vscode": "^1.0.3"
+		"@types/mocha": "^2.2.46",
+		"@types/node": "^6.0.96",
+		"typescript": "^2.6.2"
 	},
 	"scripts": {
 		"vscode:prepublish": "node ./node_modules/typescript/bin/tsc -p ./src",
