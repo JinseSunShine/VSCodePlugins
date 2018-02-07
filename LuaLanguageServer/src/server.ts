@@ -409,18 +409,20 @@ let Parse_Inspect_Result = function (document_item, inspect_result) {
 					let id_range = Range.create(error_pos, error_pos)
 					diagnostics_array.push(Diagnostic.create(id_range, json_data["msg"], DiagnosticSeverity.Error))
 				}
-				else if (json_data["GlobalCompletions"] && Array.isArray(json_data["GlobalCompletions"])) {
-					for (let GlobalNameFields of json_data["GlobalCompletions"]) {
-						if (Array.isArray(GlobalNameFields["Fields"])) {
-							let completions = new Array<CompletionItem>()
-							for (let field_name of GlobalNameFields["Fields"]) {
-								let item = CompletionItem.create(field_name)
-								item.kind = CompletionItemKind.File
-								completions.push(item)
-							}
-
-							if (!map_token_completions.has(GlobalNameFields["Name"])) {
-								map_token_completions.set(GlobalNameFields["Name"], completions)
+				else if (json_data["GlobalCompletions"]) {
+					if (Array.isArray(json_data["GlobalCompletions"])) {
+						for (let GlobalNameFields of json_data["GlobalCompletions"]) {
+							if (Array.isArray(GlobalNameFields["Fields"])) {
+								let completions = new Array<CompletionItem>()
+								for (let field_name of GlobalNameFields["Fields"]) {
+									let item = CompletionItem.create(field_name)
+									item.kind = CompletionItemKind.File
+									completions.push(item)
+								}
+	
+								if (!map_token_completions.has(GlobalNameFields["Name"])) {
+									map_token_completions.set(GlobalNameFields["Name"], completions)
+								}
 							}
 						}
 					}
